@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema version="1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:element name="config">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="context" minOccurs="1" maxOccurs="unbounded" type="context"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:complexType name="context">
+        <xs:sequence>
+            <xs:element name="folder" minOccurs="0" maxOccurs="unbounded" type="folder"/>
+        </xs:sequence>
+        <xs:attribute name="path" type="xs:string" default="/"/>
+    </xs:complexType>
+    <xs:complexType name="folder">
+        <xs:sequence>
+            <xs:element type="xs:string" name="folderPath"/>
+            <xs:element type="xs:string" name="moveDestination"/>
+            <xs:element type="xs:string" name="queueName"/>
+            <xs:element name="headers" type="headers"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="headers">
+        <xs:sequence>
+            <xs:element name="header" maxOccurs="unbounded" type="header"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="header">
+        <xs:sequence>
+            <xs:element type="xs:string" name="key"/>
+            <xs:element type="xs:string" name="value"/>
+        </xs:sequence>
+    </xs:complexType>
+    
+    
+    
+</xs:schema>
