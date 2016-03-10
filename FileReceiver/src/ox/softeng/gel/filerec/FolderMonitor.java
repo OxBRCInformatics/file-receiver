@@ -36,7 +36,9 @@ public class FolderMonitor implements Runnable {
 
 	String contextPath;
 	Path dir;
+        Path moveDestination;
 	String dirName;
+        String moveDestinationName;
 	Folder folder;
 	
 	String queueHost; // "192.168.99.100"
@@ -56,6 +58,10 @@ public class FolderMonitor implements Runnable {
 		this.contextPath = contextPath;
 		dirName = contextPath + "/" + folder.getFolderPath();
 		dir = Paths.get(dirName.replace("//", "/"));
+                
+                moveDestinationName = contextPath + "/" + folder.getMoveDestination();
+		moveDestination = Paths.get(moveDestinationName.replace("//", "/"));
+                
 		this.folder = folder;
 		
 		this.queueHost = queueHost; // "192.168.99.100"
@@ -83,6 +89,11 @@ public class FolderMonitor implements Runnable {
                         System.out.println("Folder not exists: " + dir);
                         System.out.println("Creating folder: " + dir);
                         Files.createDirectories(dir);
+                    }
+                    if (!Files.exists(moveDestination)) {
+                        System.out.println("Folder not exists: " + dir);
+                        System.out.println("Creating folder: " + dir);
+                        Files.createDirectories(moveDestination);
                     }
                     System.out.println("dir type: " + Files.getFileStore(dir).type());
 		} catch (IOException e2) {
