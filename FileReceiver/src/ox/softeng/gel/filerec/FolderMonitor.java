@@ -55,7 +55,7 @@ public class FolderMonitor implements Runnable {
 	{
 		this.contextPath = contextPath;
 		dirName = contextPath + "/" + folder.getFolderPath();
-		dir = Paths.get(dirName);
+		dir = Paths.get(dirName.replace("//", "/"));
 		this.folder = folder;
 		
 		this.queueHost = queueHost; // "192.168.99.100"
@@ -69,6 +69,7 @@ public class FolderMonitor implements Runnable {
 		try {
 			burstMessageContext = JAXBContext.newInstance(MessageDTO.class);
 		} catch (JAXBException e) {
+                    System.err.println("FolderMonitor:constructor:-");
 			e.printStackTrace();
 		}
 	}
@@ -77,12 +78,16 @@ public class FolderMonitor implements Runnable {
 	@Override
 	public void run() {
 		
-		
-		
 		try {
-			System.out.println("dir type: " + Files.getFileStore(dir).type());
+                    if (!Files.exists(dir)) {
+                        System.out.println("Folder not exists: " + dir);
+                        System.out.println("Creating folder: " + dir);
+                        Files.createDirectories(dir);
+                    }
+                    System.out.println("dir type: " + Files.getFileStore(dir).type());
 		} catch (IOException e2) {
-			e2.printStackTrace();
+                    System.err.println("FolderMonitor:run:-");
+                    e2.printStackTrace();
 		}
 		while(true)
 		{
