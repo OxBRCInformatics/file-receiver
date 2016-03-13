@@ -213,7 +213,9 @@ public class FolderMonitor implements Runnable {
         builder.appId("folder_monitor_" + contextPath);
         builder.messageId(fullPath + "_" + headerMap.get("receivedDateTime"));
         builder.timestamp(Date.from(OffsetDateTime.now(ZoneId.systemDefault()).toInstant()));
-        builder.type("file");
+        if(headerMap.containsKey("type")){
+            builder.type(headerMap.get("type").toString());
+        }else builder.type("file");
         builder.contentType(determineContentType(filename));
 
         // Send to folder queue
