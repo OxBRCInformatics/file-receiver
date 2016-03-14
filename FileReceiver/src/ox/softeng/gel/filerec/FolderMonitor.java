@@ -3,7 +3,6 @@ package ox.softeng.gel.filerec;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
 import ox.softeng.burst.domain.Severity;
 import ox.softeng.burst.services.MessageDTO;
 import ox.softeng.burst.services.MessageDTO.Metadata;
@@ -138,10 +137,11 @@ public class FolderMonitor implements Runnable {
                             if (timeDiscovered.get(fileName) + refreshTime < currentTime) {
                                 //System.out.println("File not modified.");
                                 try {
-                                    handleNewFile(f.getName());
-                                    fileSizes.remove(fileName);
-                                    lastModified.remove(fileName);
-                                    timeDiscovered.remove(fileName);
+                                    if (handleNewFile(f)) {
+                                        fileSizes.remove(fileName);
+                                        lastModified.remove(fileName);
+                                        timeDiscovered.remove(fileName);
+                                    }
                                 } catch (IOException | TimeoutException | JAXBException e) {
                                     e.printStackTrace();
                                 }
@@ -149,9 +149,9 @@ public class FolderMonitor implements Runnable {
                         }
                     }
                 }
-
+                //System.out.println("Scanning " + dir.toString());
                 // Handle recursive/sub folders
-                scanDirectoryFiles(dir.toFile().listFiles(), currentTime);
+                scanDirectoryFiles(dir.toFile().listFiles(file -> !file.isHidden()), currentTime);
 
                 try {
                     // Sleep for a second
@@ -173,10 +173,10 @@ public class FolderMonitor implements Runnable {
         if (files == null || files.length == 0) return;
 
         for (File f : files) {
-
             if (f.isDirectory()) {
-                scanDirectoryFiles(f.listFiles(), currentTime);
+                scanDirectoryFiles(f.listFiles(file -> !file.isHidden()), currentTime);
             } else {
+
                 String thisFileAbsolutePath = f.getAbsolutePath();
                 // If we've not seen this file before
                 if (!lastModified.containsKey(thisFileAbsolutePath)) {
@@ -192,15 +192,15 @@ public class FolderMonitor implements Runnable {
         }
     }
 
-    private void handleNewFile(String filename) throws IOException, TimeoutException, JAXBException {
-        String fullPath = contextPath + folder.getFolderPath() + "/" + filename;
-
+    private boolean handleNewFile(File file) throws IOException, TimeoutException, JAXBException {
+        String fullPath = file.getAbsolutePath();
         Path path = Paths.get(fullPath);
 
+       // System.out.println("Handling file " + path);
         byte[] message = Files.readAllBytes(path);
 
         Map<String, Object> headerMap = new HashMap<>();
-        headerMap.put("filename", filename);
+        headerMap.put("filename", file.getName());
         headerMap.put("directory", contextPath + folder.getFolderPath());
         headerMap.put("receivedDateTime", OffsetDateTime.now(ZoneId.systemDefault()).toString());
         for (Header h : folder.getHeaders().getHeader()) {
@@ -213,24 +213,36 @@ public class FolderMonitor implements Runnable {
         builder.appId("folder_monitor_" + contextPath);
         builder.messageId(fullPath + "_" + headerMap.get("receivedDateTime"));
         builder.timestamp(Date.from(OffsetDateTime.now(ZoneId.systemDefault()).toInstant()));
-        if(headerMap.containsKey("type")){
+        if (headerMap.containsKey("type")) {
             builder.type(headerMap.get("type").toString());
-        }else builder.type("file");
-        builder.contentType(determineContentType(filename));
+        } else builder.type("file");
+        builder.contentType(determineContentType(file.getName()));
 
+       // System.out.println("Sending to " + folder.getQueueName());
         // Send to folder queue
         channel.basicPublish(exchangeName, folder.getQueueName(), builder.build(), message);
         //String burstMessage = "File received";
 
+       // System.out.println("Sending to burst");
         // Send to burst
-        channel.basicPublish(exchangeName, burstQueue, builder.build(), getSuccessMessage(filename));
+        channel.basicPublish(exchangeName, burstQueue, builder.build(), getSuccessMessage(file.getName()));
         //System.out.println(" [x] Sent '" + message + "'");
 
-        String newPath = contextPath + folder.getMoveDestination() + "/" + filename;
-        File file = new File(fullPath);
-        file.renameTo(new File(newPath));
+        String subFolderLocation = fullPath.replace(contextPath + "/" + folder.getFolderPath() + "/", "");
+        Path newPath =  Paths.get(contextPath + "/" + folder.getMoveDestination() + "/" + subFolderLocation);
+        Files.createDirectories(newPath.getParent());
 
+      //  System.out.println("Renaming to " + newPath);
+
+        try {
+            Files.move(path,newPath);
+        }catch(Exception ex){
+            System.err.println("Could not move file: "+ex.getMessage());
+            return false;
+        }
         System.out.println("Processed: " + fullPath);
+        return true;
+
     }
 
     private String determineContentType(String filename) {
