@@ -262,7 +262,7 @@ public class FolderMonitor implements Runnable {
         MessageDTO burstMessage = new MessageDTO();
         burstMessage.setDateTimeCreated(LocalDateTime.now());
         burstMessage.setSeverity(Severity.NOTICE);
-        burstMessage.setSource("Sample tracking system");
+        burstMessage.setSource("Folder Monitoring System");
         String GMCName = "Unknown GMC";
         for (Header h : folder.getHeaders().getHeader()) {
             if ("GMC".equalsIgnoreCase(h.getKey())) {
@@ -270,7 +270,7 @@ public class FolderMonitor implements Runnable {
                 break;
             }
         }
-        burstMessage.setDetails("A file with the name \"" + filename + "\" has been uploaded for sample tracking by " + GMCName);
+        burstMessage.setDetails("A file with the name \"" + filename + "\" has been uploaded by " + GMCName);
         burstMessage.addTopic("File Receipt");
         burstMessage.addMetadata(new Metadata("GMC", GMCName));
         burstMessage.addMetadata(new Metadata("File name", filename));
