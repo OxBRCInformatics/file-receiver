@@ -211,7 +211,7 @@ public class FolderMonitor implements Runnable {
         // Set headers and other required properties
         builder.headers(headerMap);
         builder.appId("folder_monitor_" + contextPath);
-        builder.messageId(fullPath + "_" + headerMap.get("receivedDateTime"));
+        builder.messageId(file.getName() + "_" + headerMap.get("receivedDateTime"));
         builder.timestamp(Date.from(OffsetDateTime.now(ZoneId.systemDefault()).toInstant()));
         if (headerMap.containsKey("type")) {
             builder.type(headerMap.get("type").toString());
