@@ -97,11 +97,11 @@ bintray {
     pkg {
         repo = 'maven'
         name = project.name
-        userOrg = ''
+        userOrg = 'oxbrcinformatics'
         licenses = ['Apache-2.0']
-        websiteUrl = ''
-        vcsUrl = ''
-        githubRepo = ''
+        websiteUrl = 'https://github.com/OxBRCInformatics/file-receiver'
+        vcsUrl = 'https://github.com/OxBRCInformatics/file-receiver'
+        githubRepo = 'OxBRCInformatics/file-receiver'
         githubReleaseNotesFile = 'README.md'
         version {
             name = project.version
