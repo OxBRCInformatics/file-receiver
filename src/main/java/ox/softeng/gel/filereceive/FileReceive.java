@@ -1,10 +1,10 @@
-package ox.softeng.gel.filerec;
+package ox.softeng.gel.filereceive;
 
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-import ox.softeng.gel.filerec.config.Config;
-import ox.softeng.gel.filerec.config.Context;
-import ox.softeng.gel.filerec.config.Folder;
+import ox.softeng.gel.filereceive.config.Config;
+import ox.softeng.gel.filereceive.config.Context;
+import ox.softeng.gel.filereceive.config.Folder;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;

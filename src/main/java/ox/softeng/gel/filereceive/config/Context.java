@@ -6,21 +6,21 @@
 //
 
 
-package ox.softeng.gel.filerec.config;
+package ox.softeng.gel.filereceive.config;
 
-import java.util.ArrayList;
-import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
  * <p>Java class for context complex type.
- * 
+ * <p>
  * <p>The following schema fragment specifies the expected content contained within this class.
- * 
+ * <p>
  * <pre>
  * &lt;complexType name="context">
  *   &lt;complexContent>
@@ -33,12 +33,10 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;/complexContent>
  * &lt;/complexType>
  * </pre>
- * 
- * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "context", propOrder = {
-    "folder"
+        "folder"
 })
 public class Context {
 
@@ -48,25 +46,20 @@ public class Context {
 
     /**
      * Gets the value of the folder property.
-     * 
      * <p>
-     * This accessor method returns a reference to the live list,
-     * not a snapshot. Therefore any modification you make to the
-     * returned list will be present inside the JAXB object.
-     * This is why there is not a <CODE>set</CODE> method for the folder property.
-     * 
+     * <p>
+     * This accessor method returns a reference to the live list, not a snapshot. Therefore any modification you make to the returned list will be
+     * present inside the JAXB object. This is why there is not a <CODE>set</CODE> method for the folder property.
+     * <p>
      * <p>
      * For example, to add a new item, do as follows:
      * <pre>
      *    getFolder().add(newItem);
      * </pre>
-     * 
-     * 
      * <p>
-     * Objects of the following type(s) are allowed in the list
-     * {@link Folder }
-     * 
-     * 
+     * <p>
+     * <p>
+     * Objects of the following type(s) are allowed in the list {@link Folder }
      */
     public List<Folder> getFolder() {
         if (folder == null) {
@@ -77,11 +70,8 @@ public class Context {
 
     /**
      * Gets the value of the path property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
+     *
+     * @return possible object is {@link String }
      */
     public String getPath() {
         if (path == null) {
@@ -93,11 +83,8 @@ public class Context {
 
     /**
      * Sets the value of the path property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
+     *
+     * @param value allowed object is {@link String }
      */
     public void setPath(String value) {
         this.path = value;

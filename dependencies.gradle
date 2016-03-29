@@ -1,0 +1,49 @@
+ext {
+
+    groovyVersion = '2.4.6'
+    slf4jVersion = '1.7.16'
+    logbackVersion = '1.1.6'
+
+    burstVersion = '1.1.0'
+
+    rabbitmqVersion = '3.6.0'
+    guavaVersion = '19.0'
+
+    junitVersion = '4.12'
+    mockitoVersion = '1.+'
+
+}
+dependencies {
+
+    /**
+     * Core dependencies
+     */
+    compile group: 'org.codehaus.groovy', name: 'groovy', version: groovyVersion
+    compile group: 'com.rabbitmq', name: 'amqp-client', version: rabbitmqVersion
+    compile group: 'ox.softeng.burst', name: 'burst-service', version: burstVersion
+    compile group: 'com.google.guava', name: 'guava', version: guavaVersion
+
+    /**
+     * Logging
+     */
+    // Use slf4j logging API and force all log4j over slf4j
+    compile group: 'org.slf4j', name: 'slf4j-api', version: slf4jVersion
+    compile group: 'org.slf4j', name: 'log4j-over-slf4j', version: slf4jVersion, transitive: false
+    compile group: 'org.slf4j', name: 'jul-to-slf4j', version: slf4jVersion
+    compile group: 'org.slf4j', name: 'jcl-over-slf4j', version: slf4jVersion
+
+    runtime group: 'ch.qos.logback', name: 'logback-classic', version: logbackVersion, transitive: false
+    runtime group: 'ch.qos.logback', name: 'logback-core', version: logbackVersion
+
+    /**
+     * Testing
+     */
+    testCompile group: 'junit', name: 'junit', version: junitVersion
+    testCompile group: 'org.mockito', name: 'mockito-core', version: mockitoVersion
+}
+
+// Stop the test configurations from using log4j as they use logback
+configurations.testRuntime {
+    exclude module: 'slf4j-log4j12'
+    exclude module: 'log4j'
+}

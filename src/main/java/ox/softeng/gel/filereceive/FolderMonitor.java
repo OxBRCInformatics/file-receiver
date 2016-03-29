@@ -1,4 +1,4 @@
-package ox.softeng.gel.filerec;
+package ox.softeng.gel.filereceive;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
@@ -6,8 +6,8 @@ import com.rabbitmq.client.Connection;
 import ox.softeng.burst.domain.Severity;
 import ox.softeng.burst.services.MessageDTO;
 import ox.softeng.burst.services.MessageDTO.Metadata;
-import ox.softeng.gel.filerec.config.Folder;
-import ox.softeng.gel.filerec.config.Header;
+import ox.softeng.gel.filereceive.config.Folder;
+import ox.softeng.gel.filereceive.config.Header;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -30,22 +30,18 @@ import java.util.concurrent.TimeoutException;
 
 public class FolderMonitor implements Runnable {
 
-    private String contextPath;
-    private Path dir;
-    private Folder folder;
-
-    private String exchangeName; // "Carfax"
-    private String burstQueue; // "noaudit.burst"
-    private Long refreshTime;
-
-    private HashMap<String, Long> fileSizes;
-    private HashMap<String, Long> lastModified;
-    private HashMap<String, Long> timeDiscovered;
-
     private JAXBContext burstMessageContext;
-
+    private String burstQueue; // "noaudit.burst"
     private Channel channel;
     private Connection connection;
+    private String contextPath;
+    private Path dir;
+    private String exchangeName; // "Carfax"
+    private HashMap<String, Long> fileSizes;
+    private Folder folder;
+    private HashMap<String, Long> lastModified;
+    private Long refreshTime;
+    private HashMap<String, Long> timeDiscovered;
 
 
     public FolderMonitor(Connection connection, String contextPath, Folder folder, String exchangeName, String burstQueue,
@@ -168,83 +164,6 @@ public class FolderMonitor implements Runnable {
 
     }
 
-    private void scanDirectoryFiles(File[] files, Long currentTime) {
-        // Now we'll look and see if there are any new files to add
-        if (files == null || files.length == 0) return;
-
-        for (File f : files) {
-            if (f.isDirectory()) {
-                scanDirectoryFiles(f.listFiles(file -> !file.isHidden()), currentTime);
-            } else {
-
-                String thisFileAbsolutePath = f.getAbsolutePath();
-                // If we've not seen this file before
-                if (!lastModified.containsKey(thisFileAbsolutePath)) {
-                    Long thisFileLastModified = f.lastModified();
-                    Long thisFileSize = f.length();
-                    System.out.println("registering file: " + thisFileAbsolutePath);
-
-                    fileSizes.put(thisFileAbsolutePath, thisFileSize);
-                    lastModified.put(thisFileAbsolutePath, thisFileLastModified);
-                    timeDiscovered.put(thisFileAbsolutePath, currentTime);
-                }
-            }
-        }
-    }
-
-    private boolean handleNewFile(File file) throws IOException, TimeoutException, JAXBException {
-        String fullPath = file.getAbsolutePath();
-        Path path = Paths.get(fullPath);
-
-       // System.out.println("Handling file " + path);
-        byte[] message = Files.readAllBytes(path);
-
-        Map<String, Object> headerMap = new HashMap<>();
-        headerMap.put("filename", file.getName());
-        headerMap.put("directory", contextPath + folder.getFolderPath());
-        headerMap.put("receivedDateTime", OffsetDateTime.now(ZoneId.systemDefault()).toString());
-        for (Header h : folder.getHeaders().getHeader()) {
-            headerMap.put(h.getKey(), h.getValue());
-        }
-        AMQP.BasicProperties.Builder builder = new AMQP.BasicProperties().builder();
-
-        // Set headers and other required properties
-        builder.headers(headerMap);
-        builder.appId("folder_monitor_" + contextPath);
-        builder.messageId(file.getName() + "_" + headerMap.get("receivedDateTime"));
-        builder.timestamp(Date.from(OffsetDateTime.now(ZoneId.systemDefault()).toInstant()));
-        if (headerMap.containsKey("type")) {
-            builder.type(headerMap.get("type").toString());
-        } else builder.type("file");
-        builder.contentType(determineContentType(file.getName()));
-
-       // System.out.println("Sending to " + folder.getQueueName());
-        // Send to folder queue
-        channel.basicPublish(exchangeName, folder.getQueueName(), builder.build(), message);
-        //String burstMessage = "File received";
-
-       // System.out.println("Sending to burst");
-        // Send to burst
-        channel.basicPublish(exchangeName, burstQueue, builder.build(), getSuccessMessage(file.getName()));
-        //System.out.println(" [x] Sent '" + message + "'");
-
-        String subFolderLocation = fullPath.replace(contextPath + "/" + folder.getFolderPath() + "/", "");
-        Path newPath =  Paths.get(contextPath + "/" + folder.getMoveDestination() + "/" + subFolderLocation);
-        Files.createDirectories(newPath.getParent());
-
-      //  System.out.println("Renaming to " + newPath);
-
-        try {
-            Files.move(path,newPath);
-        }catch(Exception ex){
-            System.err.println("Could not move file: "+ex.getMessage());
-            return false;
-        }
-        System.out.println("Processed: " + fullPath);
-        return true;
-
-    }
-
     private String determineContentType(String filename) {
         String ext = com.google.common.io.Files.getFileExtension(filename);
 
@@ -280,6 +199,83 @@ public class FolderMonitor implements Runnable {
         ByteArrayOutputStream bas = new ByteArrayOutputStream();
         m.marshal(burstMessage, bas);
         return bas.toByteArray();
+    }
+
+    private boolean handleNewFile(File file) throws IOException, TimeoutException, JAXBException {
+        String fullPath = file.getAbsolutePath();
+        Path path = Paths.get(fullPath);
+
+        // System.out.println("Handling file " + path);
+        byte[] message = Files.readAllBytes(path);
+
+        Map<String, Object> headerMap = new HashMap<>();
+        headerMap.put("filename", file.getName());
+        headerMap.put("directory", contextPath + folder.getFolderPath());
+        headerMap.put("receivedDateTime", OffsetDateTime.now(ZoneId.systemDefault()).toString());
+        for (Header h : folder.getHeaders().getHeader()) {
+            headerMap.put(h.getKey(), h.getValue());
+        }
+        AMQP.BasicProperties.Builder builder = new AMQP.BasicProperties().builder();
+
+        // Set headers and other required properties
+        builder.headers(headerMap);
+        builder.appId("folder_monitor_" + contextPath);
+        builder.messageId(file.getName() + "_" + headerMap.get("receivedDateTime"));
+        builder.timestamp(Date.from(OffsetDateTime.now(ZoneId.systemDefault()).toInstant()));
+        if (headerMap.containsKey("type")) {
+            builder.type(headerMap.get("type").toString());
+        } else builder.type("file");
+        builder.contentType(determineContentType(file.getName()));
+
+        // System.out.println("Sending to " + folder.getQueueName());
+        // Send to folder queue
+        channel.basicPublish(exchangeName, folder.getQueueName(), builder.build(), message);
+        //String burstMessage = "File received";
+
+        // System.out.println("Sending to burst");
+        // Send to burst
+        channel.basicPublish(exchangeName, burstQueue, builder.build(), getSuccessMessage(file.getName()));
+        //System.out.println(" [x] Sent '" + message + "'");
+
+        String subFolderLocation = fullPath.replace(contextPath + "/" + folder.getFolderPath() + "/", "");
+        Path newPath = Paths.get(contextPath + "/" + folder.getMoveDestination() + "/" + subFolderLocation);
+        Files.createDirectories(newPath.getParent());
+
+        //  System.out.println("Renaming to " + newPath);
+
+        try {
+            Files.move(path, newPath);
+        } catch (Exception ex) {
+            System.err.println("Could not move file: " + ex.getMessage());
+            return false;
+        }
+        System.out.println("Processed: " + fullPath);
+        return true;
+
+    }
+
+    private void scanDirectoryFiles(File[] files, Long currentTime) {
+        // Now we'll look and see if there are any new files to add
+        if (files == null || files.length == 0) return;
+
+        for (File f : files) {
+            if (f.isDirectory()) {
+                scanDirectoryFiles(f.listFiles(file -> !file.isHidden()), currentTime);
+            } else {
+
+                String thisFileAbsolutePath = f.getAbsolutePath();
+                // If we've not seen this file before
+                if (!lastModified.containsKey(thisFileAbsolutePath)) {
+                    Long thisFileLastModified = f.lastModified();
+                    Long thisFileSize = f.length();
+                    System.out.println("registering file: " + thisFileAbsolutePath);
+
+                    fileSizes.put(thisFileAbsolutePath, thisFileSize);
+                    lastModified.put(thisFileAbsolutePath, thisFileLastModified);
+                    timeDiscovered.put(thisFileAbsolutePath, currentTime);
+                }
+            }
+        }
     }
 
 }

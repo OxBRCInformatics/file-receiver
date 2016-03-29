@@ -1,0 +1,104 @@
+idea {
+    module {
+        excludeDirs += file('.idea')
+        excludeDirs += file('deploy')
+        excludeDirs += file('.shelf')
+        excludeDirs += file('reports')
+        excludeDirs += file('logs')
+
+        downloadJavadoc = true
+        downloadSources = true
+
+        iml.withXml {provider ->
+            /**
+             * Add gradle setup to the module
+             */
+            provider.node.@'external.linked.project.path' = '$MODULE_DIR$'
+            provider.node.@'external.root.project.path' = '$MODULE_DIR$'
+            provider.node.@'external.system.id' = 'GRADLE'
+            provider.node.@'external.system.module.group' = ''
+            provider.node.@'external.system.module.version' = version
+        }
+    }
+    project {
+        languageLevel = rootProject.sourceCompatibility
+        vcs = 'Git'
+        ipr.withXml {provider ->
+            /**
+             * Setup the gradle settings to allow integration into intellij without intellig getting confused
+             */
+            String GRADLE_HOME = System.getenv('GRADLE_HOME') ? System.getenv('GRADLE_HOME') : ''
+            def moduleList = modules.collect {
+                String contRoot = it.contentRoot.toURI().toURL().toString()
+                String root = rootDir.toURI().toURL().toString()
+                String path = contRoot.replace(root, '$PROJECT_DIR$/')
+                path.endsWith('/') ? path.substring(0, path.lastIndexOf('/')) : path
+            }
+
+            def gradleSettings = {
+                option(name: 'linkedExternalProjectsSettings') {
+                    GradleProjectSettings() {
+                        option(name: 'distributionType', value: 'DEFAULT_WRAPPED')
+                        option(name: 'externalProjectPath', value: '$PROJECT_DIR$')
+                        option(name: 'gradleHome', value: GRADLE_HOME)
+                        option(name: 'modules') {
+
+                            set(comment: "${modules.collect {it.name}.join(',')}") {
+                                for (String m : moduleList) {
+                                    option(value: m)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Node gradleNode = provider.node.component.find {it.@name == 'GradleSettings'}
+            if (gradleNode != null) {
+                provider.node.remove(gradleNode)
+            }
+            provider.node.component[0].plus {
+                component(name: 'GradleSettings', gradleSettings)
+            }
+
+            if (provider.node.component.find {it.@name == 'GradleUISettings'} == null) {
+                provider.node.component[0].plus {
+                    component(name: 'GradleUISettings') {
+                        setting(name: 'root')
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Setup the workspace (IWS) file
+     */
+    workspace.iws.withXml {provider ->
+
+        def runManager = provider.node.component.find {it.@name == 'RunManager'}
+
+        /**
+         * Setup JUnit defaults to have the extra JVM options we know we need
+         */
+        def junitDefaults = runManager.configuration.find {it.@type == 'JUnit'}
+        if (junitDefaults != null) {
+            def workingDir = junitDefaults.option.find {it.@name == 'WORKING_DIRECTORY'}
+            workingDir.@value = '$PROJECT_DIR$'
+        }
+
+        def propertiesComponent = provider.node.component.find {
+            it.@name == 'PropertiesComponent'
+        }
+        def dynamicclasspath = propertiesComponent.property.find {it.@name == 'dynamic.classpath'}
+        if (dynamicclasspath != null) {
+            dynamicclasspath.@value == 'true'
+        }
+        else {
+            propertiesComponent.property[-1].plus {
+                property(name: 'dynamic.classpath', value: 'true')
+                property(name: 'grails.sdk.home', value: System.getenv('GRAILS_HOME'))
+            }
+        }
+    }
+}

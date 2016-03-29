@@ -6,7 +6,7 @@
 //
 
 
-package ox.softeng.gel.filerec.config;
+package ox.softeng.gel.filereceive.config;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -16,9 +16,9 @@ import javax.xml.bind.annotation.XmlType;
 
 /**
  * <p>Java class for folder complex type.
- * 
+ * <p>
  * <p>The following schema fragment specifies the expected content contained within this class.
- * 
+ * <p>
  * <pre>
  * &lt;complexType name="folder">
  *   &lt;complexContent>
@@ -33,34 +33,29 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;/complexContent>
  * &lt;/complexType>
  * </pre>
- * 
- * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "folder", propOrder = {
-    "folderPath",
-    "moveDestination",
-    "queueName",
-    "headers"
+        "folderPath",
+        "moveDestination",
+        "queueName",
+        "headers"
 })
 public class Folder {
 
     @XmlElement(required = true)
     protected String folderPath;
     @XmlElement(required = true)
+    protected Headers headers;
+    @XmlElement(required = true)
     protected String moveDestination;
     @XmlElement(required = true)
     protected String queueName;
-    @XmlElement(required = true)
-    protected Headers headers;
 
     /**
      * Gets the value of the folderPath property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
+     *
+     * @return possible object is {@link String }
      */
     public String getFolderPath() {
         return folderPath;
@@ -68,71 +63,17 @@ public class Folder {
 
     /**
      * Sets the value of the folderPath property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
+     *
+     * @param value allowed object is {@link String }
      */
     public void setFolderPath(String value) {
         this.folderPath = value;
     }
 
     /**
-     * Gets the value of the moveDestination property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
-     */
-    public String getMoveDestination() {
-        return moveDestination;
-    }
-
-    /**
-     * Sets the value of the moveDestination property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
-     */
-    public void setMoveDestination(String value) {
-        this.moveDestination = value;
-    }
-
-    /**
-     * Gets the value of the queueName property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
-     */
-    public String getQueueName() {
-        return queueName;
-    }
-
-    /**
-     * Sets the value of the queueName property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
-     */
-    public void setQueueName(String value) {
-        this.queueName = value;
-    }
-
-    /**
      * Gets the value of the headers property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Headers }
-     *     
+     *
+     * @return possible object is {@link Headers }
      */
     public Headers getHeaders() {
         return headers;
@@ -140,14 +81,47 @@ public class Folder {
 
     /**
      * Sets the value of the headers property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Headers }
-     *     
+     *
+     * @param value allowed object is {@link Headers }
      */
     public void setHeaders(Headers value) {
         this.headers = value;
+    }
+
+    /**
+     * Gets the value of the moveDestination property.
+     *
+     * @return possible object is {@link String }
+     */
+    public String getMoveDestination() {
+        return moveDestination;
+    }
+
+    /**
+     * Sets the value of the moveDestination property.
+     *
+     * @param value allowed object is {@link String }
+     */
+    public void setMoveDestination(String value) {
+        this.moveDestination = value;
+    }
+
+    /**
+     * Gets the value of the queueName property.
+     *
+     * @return possible object is {@link String }
+     */
+    public String getQueueName() {
+        return queueName;
+    }
+
+    /**
+     * Sets the value of the queueName property.
+     *
+     * @param value allowed object is {@link String }
+     */
+    public void setQueueName(String value) {
+        this.queueName = value;
     }
 
 }

@@ -1,0 +1,152 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        jcenter()
+
+    }
+    dependencies {
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'idea'
+apply plugin: 'eclipse'
+
+group = 'ox.softeng.gel'
+version = '0.0.1-SNAPSHOT'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+logger.quiet "Project: $name > group: $group, version: $version"
+
+repositories {
+    mavenLocal()
+    maven {url "http://dl.bintray.com/oxbrcinformatics/maven"}
+    jcenter()
+}
+
+apply from: 'dependencies.gradle'
+apply from: 'idea.gradle'
+
+configurations.all {
+    // check for updates every build
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+}
+
+/**
+ * Setup the Unit testing
+ * Any projects with code plugins will also have test cases, these are all unit tests ONLY
+ */
+test {
+    group 'testing'
+    useJUnit()
+    ignoreFailures = true
+    systemProperties(['file.encoding': 'UTF-8'])
+    workingDir = rootDir
+    maxParallelForks = 20
+    afterSuite {td, tr ->
+        if (!(td.parent)) {
+            rootProject.unitTestFailures = rootProject.unitTestFailures + tr.failedTestCount
+        }
+    }
+}
+
+/**
+ * Define the jar/war manifest
+ */
+def manifestAttrs = [
+        "Created-By"            : "${JavaVersion.current().toString()} JVM, ${gradle.gradleVersion} Gradle",
+        "Specification-Title"   : "$rootProject.name $project.name Classes",
+        "Specification-Version" : version,
+        "Implementation-Title"  : "${project.group.toLowerCase()}.${project.name.toLowerCase()}",
+        "Implementation-Version": "${version}",
+        "Implementation-Vendor" : "Oxford University",
+]
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    group 'build'
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+tasks.javadoc.failOnError false
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    group 'build'
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+clean {
+    delete 'logs'
+}
+
+/**
+ * Add jars as artifacts, this will cause them to be built as part of assemble and will automatically be
+ * included as part of the publishing mechanism.
+ * For some reason, some change made has meant that any tars included stop the automatic addition of the standard
+ * jar file, therefore we define it as required.
+ */
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
+
+
+bintray {
+    user = System.getenv('BINTRAY_USER')
+    key = System.getenv('BINTRAY_KEY')
+    pkg {
+        repo = 'maven'
+        name = project.name
+        userOrg = ''
+        licenses = ['Apache-2.0']
+        websiteUrl = ''
+        vcsUrl = ''
+        githubRepo = ''
+        githubReleaseNotesFile = 'README.md'
+        version {
+            name = project.version
+            desc = "File Receive - ${project.name} ${project.version}"
+            released = new Date()
+            vcsTag = "${project.version}"
+        }
+    }
+    configurations = ['archives']
+    dryRun = false //Whether to run this as dry-run, without deploying
+    publish = true //If version should be auto published after an upload
+}
+
+afterEvaluate {
+
+    /*
+     * Set up compile tasks to use default encoding and other compile options.
+     */
+    tasks.withType(JavaCompile) {JavaCompile compile ->
+        compile.options.encoding = 'UTF-8'
+        //compile.options.incremental = useIncrementalJavaBuilding.toBoolean()
+        compile.options.compilerArgs.add('-Xlint:unchecked')
+        compile.options.compilerArgs.add('-Xlint:deprecation')
+    }
+
+    tasks.withType(GroovyCompile) {GroovyCompile compile ->
+        compile.groovyOptions.encoding = 'UTF-8'
+        compile.options.encoding = 'UTF-8'
+        compile.groovyOptions.keepStubs = true
+        compile.groovyOptions.stubDir = file("$buildDir/stubs")
+        compile.groovyOptions.optimizationOptions.put('all', true)
+    }
+    tasks.withType(Jar) {
+        jar {
+            manifest {
+                attributes(manifestAttrs)
+            }
+            sourceCompatibility = project.sourceCompatibility
+        }
+    }
+
+
+}
