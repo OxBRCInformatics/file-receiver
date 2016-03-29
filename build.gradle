@@ -48,11 +48,6 @@ test {
     systemProperties(['file.encoding': 'UTF-8'])
     workingDir = rootDir
     maxParallelForks = 20
-    afterSuite {td, tr ->
-        if (!(td.parent)) {
-            rootProject.unitTestFailures = rootProject.unitTestFailures + tr.failedTestCount
-        }
-    }
 }
 
 /**
