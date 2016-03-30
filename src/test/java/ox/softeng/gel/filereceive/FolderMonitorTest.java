@@ -13,6 +13,7 @@ import org.junit.rules.ExpectedException;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.UUID;
 
@@ -30,7 +31,7 @@ public class FolderMonitorTest {
     private FolderMonitor fm;
     private Folder folder;
     private UUID testName;
-    private Long time;
+    private LocalDateTime time;
 
     @Test
     public void checkingForFilesToHandleShouldFindFilesAsExpected() throws Exception {
@@ -167,7 +168,7 @@ public class FolderMonitorTest {
         assertTrue("moved temp file should exist", Files.exists(Paths.get(fm.moveDir.toString(), renameFilename)));
 
         Files.createFile(tempFile);
-        time = System.currentTimeMillis();
+        time = LocalDateTime.now();
         result = fm.processFile(tempFile, time);
         verify(fm.channel, times(2)).basicPublish(eq("testexc"), eq("burst-queue"), any(), any());
         verify(fm.channel, times(2)).basicPublish(eq("testexc"), eq("test-queue"), any(), any());
@@ -181,7 +182,7 @@ public class FolderMonitorTest {
 
         fm = new FolderMonitor(null, TEMP_TEST_FOLDER, folder, null, null, 0L);
 
-        fm.scanMonitorDirectory(System.currentTimeMillis());
+        fm.scanMonitorDirectory(LocalDateTime.now());
 
         assertTrue("Should have no files", fm.fileSizes.isEmpty());
         assertTrue("Should have no files", fm.lastModified.isEmpty());
@@ -241,7 +242,7 @@ public class FolderMonitorTest {
         folder.setQueueName("test-queue");
         folder.setHeaders(new Headers());
 
-        time = System.currentTimeMillis();
+        time = LocalDateTime.now();
     }
 
     @AfterClass
