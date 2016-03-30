@@ -23,8 +23,8 @@ public class FileReceive {
     private static final Logger logger = LoggerFactory.getLogger(FileReceive.class);
     private String burstQueue;
     private Config config;
-    private Connection connection;
     private String exchangeName;
+    private ConnectionFactory factory;
     private Long refreshTime;
 
     public FileReceive(String configFilename, String queueHost, String exchangeName, String burstQueue, Long refreshTime)
@@ -37,24 +37,26 @@ public class FileReceive {
                     " - BuRST Queue: {}\n" +
                     " - Refresh Time: {} seconds", configFilename, queueHost, exchangeName, burstQueue, refreshTime);
 
-        this.refreshTime = refreshTime * 1000; // Convert to ms
+        this.refreshTime = refreshTime;
         this.exchangeName = exchangeName;
         this.burstQueue = burstQueue;
 
-        // Only create 1 connection from the program, use 1 channel per monitor.
-        ConnectionFactory factory = new ConnectionFactory();
+        factory = new ConnectionFactory();
         factory.setHost(queueHost);
-        connection = factory.newConnection();
 
         File configFile = new File(configFilename);
         Unmarshaller unmarshaller = JAXBContext.newInstance(Config.class).createUnmarshaller();
         config = (Config) unmarshaller.unmarshal(configFile);
     }
 
-    private void startMonitors() {
+    private void startMonitors() throws IOException, TimeoutException {
 
         for (Context c : config.getContext()) {
             logger.info("Starting {} folder monitors for context {}", c.getFolder().size(), c.getPath());
+
+            // One connection for each context
+            Connection connection = factory.newConnection();
+
             int count = 0;
             for (Folder f : c.getFolder()) {
                 Path folderPath = Paths.get(c.getPath(), f.getFolderPath());
