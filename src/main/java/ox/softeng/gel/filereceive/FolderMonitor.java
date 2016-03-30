@@ -87,15 +87,15 @@ public class FolderMonitor implements Runnable {
                 Long currentTime = System.currentTimeMillis();
 
                 // First we'll go through and find any files to handle
-                logger.debug("Checking for files to handle");
+                logger.trace("Checking for files to handle");
                 Set<Path> filesToHandle = checkForFilesToHandle(currentTime);
 
                 // Process any files to handle
-                logger.debug("Processing {} files", filesToHandle.size());
+                logger.trace("Processing {} files", filesToHandle.size());
                 processFiles(filesToHandle, currentTime);
 
                 // Handle recursive/sub folders
-                logger.debug("Scanning: {}", monitorDir);
+                logger.trace("Scanning {}", monitorDir);
                 scanMonitorDirectory(currentTime);
 
                 try {
