@@ -21,13 +21,16 @@ import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
 import java.sql.Date;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
 
 public class FolderMonitor implements Runnable {
 
+    private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_hh-mm-ss_SSS");
     private static final Logger logger = LoggerFactory.getLogger(FolderMonitor.class);
     Channel channel;
     HashMap<Path, Long> fileSizes;
@@ -35,7 +38,7 @@ public class FolderMonitor implements Runnable {
     Path monitorDir;
     Path moveDir;
     Long refreshTime;
-    HashMap<Path, Long> timeDiscovered;
+    HashMap<Path, LocalDateTime> timeDiscovered;
     private JAXBContext burstMessageContext;
     private String burstQueue; // "noaudit.burst"
     private Connection connection;
@@ -84,7 +87,7 @@ public class FolderMonitor implements Runnable {
             channel.exchangeDeclare(exchangeName, "topic", true);
 
             while (channel.isOpen()) {
-                Long currentTime = System.currentTimeMillis();
+                LocalDateTime currentTime = LocalDateTime.now();
 
                 // First we'll go through and find any files to handle
                 logger.trace("Checking for files to handle");
@@ -113,13 +116,13 @@ public class FolderMonitor implements Runnable {
 
     }
 
-    Set<Path> checkForFilesToHandle(Long currentTime) throws IOException {
+    Set<Path> checkForFilesToHandle(LocalDateTime currentTime) throws IOException {
         // Keep a copy of the keyset so that we can modify the underlying hashset while iterating.
         Set<Path> paths = new HashSet<>(timeDiscovered.keySet());
         Set<Path> filesToHandle = new HashSet<>();
 
         for (Path path : paths) {
-            logger.debug("Examining file: {}", path);
+            logger.trace("Examining file: {}", path);
 
             // If the file no-longer exists, then remove it
             if (!Files.exists(path)) {
@@ -141,7 +144,7 @@ public class FolderMonitor implements Runnable {
                 } else // It's the same file as we've seen before...
                 {
                     // Only consider it if it has been there for a suitable duration
-                    if (timeDiscovered.get(path) + refreshTime < currentTime) {
+                    if (currentTime.isAfter(timeDiscovered.get(path).plusSeconds(refreshTime))) {
                         logger.debug("File {} hasn't been changed in last {} seconds, adding to list to process", path, refreshTime);
                         filesToHandle.add(path);
                     }
@@ -151,7 +154,7 @@ public class FolderMonitor implements Runnable {
         return filesToHandle;
     }
 
-    boolean processFile(Path path, Long currentTime) throws IOException, TimeoutException, JAXBException {
+    boolean processFile(Path path, LocalDateTime currentTime) throws IOException, TimeoutException, JAXBException {
 
         logger.debug("Handling file " + path);
         byte[] message = Files.readAllBytes(path);
@@ -161,22 +164,22 @@ public class FolderMonitor implements Runnable {
         AMQP.BasicProperties basicProperties = buildRabbitProperties(filename);
 
         // Send to folder queue
-        logger.debug("Sending to {}", folder.getQueueName());
+        logger.trace("Sending to rabbitmq queue '{}'", folder.getQueueName());
         channel.basicPublish(exchangeName, folder.getQueueName(), basicProperties, message);
 
         // Send to burst
-        logger.debug("Sending to Burst");
+        logger.trace("Sending success message to rabbitmq queue '{}'", burstQueue);
         sendBurstMessage(basicProperties, buildSuccessMessage(filename));
 
         // Log that the message and success message have gone
-        logger.debug("Sent {} to Burst and {}", path, folder.getQueueName());
+        logger.debug("Sent {} and success to rabbitmq queues '{}' and '{}'", path, burstQueue, folder.getQueueName());
 
         // Resolve the path against the moveDir to handle sub directories and get the resulting parent folder
         Path moveFolder = moveDir.resolve(monitorDir.relativize(path)).getParent();
         Files.createDirectories(moveFolder);
 
         String ext = com.google.common.io.Files.getFileExtension(filename);
-        String renameFilename = filename.replace("." + ext, "." + currentTime + "." + ext);
+        String renameFilename = filename.replace("." + ext, "." + currentTime.format(dateTimeFormatter) + "." + ext);
         Path moveFile = Paths.get(moveFolder.toString(), renameFilename);
 
         logger.debug("Renaming to " + moveFile);
@@ -187,7 +190,7 @@ public class FolderMonitor implements Runnable {
 
     }
 
-    void scanMonitorDirectory(Long currentTime) {
+    void scanMonitorDirectory(LocalDateTime currentTime) {
         try {
             Files.walkFileTree(monitorDir, new SimpleFileVisitor<Path>() {
                 @Override
@@ -251,7 +254,7 @@ public class FolderMonitor implements Runnable {
         Map<String, Object> headerMap = new HashMap<>();
         headerMap.put("filename", filename);
         headerMap.put("directory", monitorDir.toString());
-        headerMap.put("receivedDateTime", OffsetDateTime.now(ZoneId.of("UTC")));
+        headerMap.put("receivedDateTime", OffsetDateTime.now(ZoneId.of("UTC")).format(DateTimeFormatter.ISO_DATE_TIME));
 
         for (Header h : folder.getHeaders().getHeader()) {
             headerMap.put(h.getKey(), h.getValue());
@@ -305,7 +308,7 @@ public class FolderMonitor implements Runnable {
         } catch (IOException | JAXBException ignored) {}
     }
 
-    private void processFiles(Collection<Path> paths, Long currentTime) {
+    private void processFiles(Collection<Path> paths, LocalDateTime currentTime) {
         for (Path path : paths) {
             try {
                 if (processFile(path, currentTime)) {
