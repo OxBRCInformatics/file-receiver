@@ -63,6 +63,8 @@ def manifestAttrs = [
         "Main-Class"            : "ox.softeng.gel.filereceive.FileReceive",
 ]
 
+mainClassName="ox.softeng.gel.filereceive.FileReceive"
+
 // If supplied any default args then pass them into run scripts
 if (project.hasProperty('defaultApplicationJvmArgs'))
     applicationDefaultJvmArgs = ((String) defaultApplicationJvmArgs).split(',')
