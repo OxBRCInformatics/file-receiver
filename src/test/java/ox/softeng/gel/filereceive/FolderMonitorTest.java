@@ -101,7 +101,7 @@ public class FolderMonitorTest {
         Path tempFile2 = Files.createTempFile(tempFolder, "test2.", ".xml");
         String filename = tempFile2.getFileName().toString();
         String ext = com.google.common.io.Files.getFileExtension(filename);
-        String renameFilename = filename.replace("." + ext, "." + time + "." + ext);
+        String renameFilename = filename.replace("." + ext, "." + time.format(FolderMonitor.dateTimeFormatter) + "." + ext);
 
         boolean result = fm.processFile(tempFile2, time);
 
@@ -124,7 +124,7 @@ public class FolderMonitorTest {
         Files.write(tempFile, content.getBytes());
         String filename = tempFile.getFileName().toString();
         String ext = com.google.common.io.Files.getFileExtension(filename);
-        String renameFilename = filename.replace("." + ext, "." + time + "." + ext);
+        String renameFilename = filename.replace("." + ext, "." + time.format(FolderMonitor.dateTimeFormatter) + "." + ext);
 
         boolean result = fm.processFile(tempFile, time);
         verify(fm.channel).basicPublish(eq("testexc"), eq("burst-queue"), any(), any());
@@ -158,7 +158,7 @@ public class FolderMonitorTest {
         Files.write(tempFile, content.getBytes());
         String filename = tempFile.getFileName().toString();
         String ext = com.google.common.io.Files.getFileExtension(filename);
-        String renameFilename = filename.replace("." + ext, "." + time + "." + ext);
+        String renameFilename = filename.replace("." + ext, "." + time.format(FolderMonitor.dateTimeFormatter) + "." + ext);
 
         boolean result = fm.processFile(tempFile, time);
         verify(fm.channel).basicPublish(eq("testexc"), eq("burst-queue"), any(), any());
