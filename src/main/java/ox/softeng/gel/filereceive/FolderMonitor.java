@@ -30,7 +30,7 @@ import java.util.concurrent.TimeoutException;
 
 public class FolderMonitor implements Runnable {
 
-    private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_hh-mm-ss_SSS");
+    static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_hh-mm-ss_SSS");
     private static final Logger logger = LoggerFactory.getLogger(FolderMonitor.class);
     Channel channel;
     HashMap<Path, Long> fileSizes;
