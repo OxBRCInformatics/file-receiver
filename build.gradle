@@ -14,9 +14,9 @@ apply plugin: 'maven'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'idea'
 apply plugin: 'eclipse'
+apply plugin: 'application'
 
 group = 'ox.softeng.gel'
-version = '1.0.0'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -60,7 +60,12 @@ def manifestAttrs = [
         "Implementation-Title"  : "${project.group.toLowerCase()}.${project.name.toLowerCase()}",
         "Implementation-Version": "${version}",
         "Implementation-Vendor" : "Oxford University",
+        "Main-Class"            : "ox.softeng.gel.filereceive.FileReceive",
 ]
+
+// If supplied any default args then pass them into run scripts
+if (project.hasProperty('defaultApplicationJvmArgs'))
+    applicationDefaultJvmArgs = ((String) defaultApplicationJvmArgs).split(',')
 
 task sourcesJar(type: Jar, dependsOn: classes) {
     group 'build'
