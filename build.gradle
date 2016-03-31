@@ -63,10 +63,22 @@ def manifestAttrs = [
 ]
 
 mainClassName="ox.softeng.gel.filereceive.FileReceive"
+applicationDefaultJvmArgs = ["-DapplicationVersion=${version}"]
 
 // If supplied any default args then pass them into run scripts
 if (project.hasProperty('defaultApplicationJvmArgs'))
-    applicationDefaultJvmArgs = ((String) defaultApplicationJvmArgs).split(',')
+    applicationDefaultJvmArgs += ((String) defaultApplicationJvmArgs).split(',')
+
+installDist {
+    if(System.env.FILE_RECEIVER_INSTALL_DIR){
+        destinationDir = file(System.env.FILE_RECEIVER_INSTALL_DIR)
+    }
+
+    outputs.upToDateWhen{ false}
+    doLast{
+        logger.quiet "Installed application to {}", destinationDir
+    }
+}
 
 task sourcesJar(type: Jar, dependsOn: classes) {
     group 'build'

@@ -30,6 +30,12 @@ public class FileReceive {
     public FileReceive(String configFilename, String queueHost, String exchangeName, String burstQueue, Long refreshTime)
             throws JAXBException, IOException, TimeoutException {
 
+        logger.info("Starting application version {}",System.getProperty("applicationVersion"));
+
+        // Output env version from potential dockerfile environment
+        if(System.getenv("FILE_RECEIVER_VERSION") != null)
+            logger.info("Docker container build version {}",System.getenv("FILE_RECEIVER_VERSION"));
+
         logger.info("Using:\n" +
                     " - Config file: {}\n" +
                     " - Queue Host: {}\n" +
