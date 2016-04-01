@@ -272,6 +272,9 @@ public class FolderMonitor implements Runnable {
         } else builder.type("file");
         builder.contentType(determineContentType(filename));
 
+        // Make sure the message is persisted incase of failure
+        builder.deliveryMode(2);
+
         return builder.build();
     }
 
