@@ -6,6 +6,7 @@ import ox.softeng.gel.filereceive.config.Folder;
 
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,38 +22,117 @@ import java.util.concurrent.TimeoutException;
 public class FileReceive {
 
     private static final Logger logger = LoggerFactory.getLogger(FileReceive.class);
+    private static final CommandLineParser parser = new DefaultParser();
     private String burstQueue;
     private Config config;
     private String exchangeName;
     private ConnectionFactory factory;
     private Long refreshTime;
 
-    public FileReceive(String configFilename, String queueHost, String exchangeName, String burstQueue, Long refreshTime)
+    public FileReceive(String configFilename, String rabbitMqHost, Integer rabbitMqPort, String exchangeName, String burstQueue, Long refreshTime)
             throws JAXBException, IOException, TimeoutException {
 
-        logger.info("Starting application version {}",System.getProperty("applicationVersion"));
+        logger.info("Starting application version {}", System.getProperty("applicationVersion"));
 
         // Output env version from potential dockerfile environment
-        if(System.getenv("FILE_RECEIVER_VERSION") != null)
-            logger.info("Docker container build version {}",System.getenv("FILE_RECEIVER_VERSION"));
+        if (System.getenv("FILE_RECEIVER_VERSION") != null)
+            logger.info("Docker container build version {}", System.getenv("FILE_RECEIVER_VERSION"));
+
+        Integer port = rabbitMqPort != null ? rabbitMqPort : ConnectionFactory.DEFAULT_AMQP_PORT;
 
         logger.info("Using:\n" +
                     " - Config file: {}\n" +
-                    " - Queue Host: {}\n" +
+                    " - RabbitMQ Server Host: {}:{}\n" +
                     " - Exchange Name: {}\n" +
-                    " - BuRST Queue: {}\n" +
-                    " - Refresh Time: {} seconds", configFilename, queueHost, exchangeName, burstQueue, refreshTime);
+                    " - BuRST Queue Binding: {}\n" +
+                    " - Refresh Time: {} seconds", configFilename, rabbitMqHost, port, exchangeName, burstQueue, refreshTime);
 
         this.refreshTime = refreshTime;
         this.exchangeName = exchangeName;
         this.burstQueue = burstQueue;
 
         factory = new ConnectionFactory();
-        factory.setHost(queueHost);
+        factory.setHost(rabbitMqHost);
+        factory.setPort(port);
 
         File configFile = new File(configFilename);
         Unmarshaller unmarshaller = JAXBContext.newInstance(Config.class).createUnmarshaller();
         config = (Config) unmarshaller.unmarshal(configFile);
+    }
+
+    private static Options defineMainOptions() {
+        Options options = new Options();
+        options.addOption(
+                Option.builder("c").longOpt("config")
+                        .argName("FILE")
+                        .hasArg().required()
+                        .desc("The config file defining the monitor config")
+                        .build());
+        options.addOption(
+                Option.builder("r").longOpt("rabbitmq-server")
+                        .argName("RABBITMQ_HOST")
+                        .hasArg().required()
+                        .desc("Hostname for the RabbitMQ server")
+                        .build());
+        options.addOption(
+                Option.builder("p").longOpt("rabbitmq-port")
+                        .argName("RABBITMQ_PORT")
+                        .hasArg()
+                        .desc("[Optional] Port for the RabbitMQ server, default is 5672")
+                        .type(Number.class)
+                        .build());
+        options.addOption(
+                Option.builder("e").longOpt("exchange")
+                        .argName("EXCHANGE")
+                        .hasArg().required()
+                        .desc("Exchange on the RabbitMQ server to send files to.\n" +
+                              "Queues for the folders are designated in the config file")
+                        .build());
+        options.addOption(
+                Option.builder("b").longOpt("burst-binding")
+                        .argName("BURST")
+                        .hasArg().required()
+                        .desc("Binding key for the BuRST queue at the named exchange")
+                        .build());
+        options.addOption(
+                Option.builder("t").longOpt("refresh-time")
+                        .argName("TIME")
+                        .hasArg().required()
+                        .desc("Refresh time for monitoring in seconds")
+                        .type(Number.class)
+                        .build());
+        return options;
+    }
+
+    private static boolean hasSimpleOptions(String[] args) {
+
+        Options options = new Options();
+        OptionGroup group = new OptionGroup();
+        group.addOption(Option.builder("h").longOpt("help").build());
+        group.addOption(Option.builder("v").longOpt("version").build());
+        options.addOptionGroup(group);
+
+        try {
+            // parse the command line arguments
+            CommandLine line = parser.parse(options, args);
+            if (line.hasOption("h")) help();
+            if (line.hasOption("v")) System.out.println(version());
+            ;
+            return true;
+        } catch (ParseException ignored) {}
+        return false;
+    }
+
+    private static void help() {
+        HelpFormatter formatter = new HelpFormatter();
+
+        String header = "Receive files by monitoring folders and forwarding files to a RabbitMQ system.\n" +
+                        "Sends success messages and error messages to a BuRST system.\n\n";
+        String footer = "\n" + version() + "\n\nPlease report issues at https://github.com/oxbrcinformatics/file-receiver/issues\n";
+
+        formatter.printHelp(120,
+                            "file-receiver -c <FILE> -r <RABBITMQ_HOST> [-p <RABBITMQ_PORT>] -e <EXCHANGE> -b <BURST> -t <TIME>",
+                            header, defineMainOptions(), footer, false);
     }
 
     private void startMonitors() throws IOException, TimeoutException {
@@ -83,28 +163,41 @@ public class FileReceive {
         }
     }
 
-    public static void main(String[] args) {
-        if (args.length < 5) {
-            System.err.println("Usage: FileReceive configFile queueHost exchangeName burstQueue refreshTime(s)");
-            System.exit(0);
-        }
-        long start = System.currentTimeMillis();
+    private static String version() {
+        return "file-receiver version: \"" + FileReceive.class.getPackage().getSpecificationVersion() + "\"\n" +
+               "Java Version: \"" + System.getProperty("java.version") + "\"";
 
-        String configFilename = args[0];
-        String queueHost = args[1];
-        String exchangeName = args[2];
-        String burstQueue = args[3];
-        Long refreshTime = Long.parseLong(args[4]);
+    }
+
+    public static void main(String[] args) {
+
+        if (hasSimpleOptions(args)) System.exit(0);
 
         try {
-            FileReceive fr = new FileReceive(configFilename, queueHost, exchangeName, burstQueue, refreshTime);
-            fr.startMonitors();
-        } catch (JAXBException | IOException | TimeoutException e) {
-            logger.error("Could not create file receiver because {}", e.getMessage());
-            e.printStackTrace();
+            // parse the command line arguments
+            CommandLine line = parser.parse(defineMainOptions(), args);
+
+            long start = System.currentTimeMillis();
+
+            try {
+                FileReceive fr = new FileReceive(line.getOptionValue('c'),
+                                                 line.getOptionValue('r'),
+                                                 (Integer) line.getParsedOptionValue("p"),
+                                                 line.getOptionValue('e'),
+                                                 line.getOptionValue('b'),
+                                                 (Long) line.getParsedOptionValue("t"));
+                fr.startMonitors();
+
+                logger.info("File receiver started in {}ms", System.currentTimeMillis() - start);
+            } catch (JAXBException ex) {
+                logger.error("Could not create file receiver because of JAXBException: {}", ex.getLinkedException().getMessage());
+            } catch (IOException | TimeoutException ex) {
+                logger.error("Could not create file receiver because: {}", ex.getMessage());
+                ex.printStackTrace();
+            }
+        } catch (ParseException exp) {
+            logger.error("Could not start file-receiver because of ParseException: " + exp.getMessage());
+            help();
         }
-
-
-        logger.info("File receiver started in {}ms", System.currentTimeMillis() - start);
     }
 }
