@@ -165,3 +165,5 @@ gradle-app.setting
 !gradle-wrapper.jar
 
 logs/
+
+!src/docker/bin
