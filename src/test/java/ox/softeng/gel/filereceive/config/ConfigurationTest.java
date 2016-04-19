@@ -11,9 +11,9 @@ import java.nio.file.Paths;
 import static org.junit.Assert.*;
 
 /**
- * @since 29/03/2016
+ * @since 19/04/2016
  */
-public class ConfigTest {
+public class ConfigurationTest {
 
     @Test
     public void testLoadingXmlIntoConfig() throws Exception {
@@ -22,8 +22,8 @@ public class ConfigTest {
         assertTrue("Must have a config path", Files.exists(configPath));
 
 
-        Unmarshaller unmarshaller = JAXBContext.newInstance(Config.class).createUnmarshaller();
-        Config config = (Config) unmarshaller.unmarshal(configPath.toFile());
+        Unmarshaller unmarshaller = JAXBContext.newInstance(Configuration.class).createUnmarshaller();
+        Configuration config = (Configuration) unmarshaller.unmarshal(configPath.toFile());
         assertNotNull("Should have loaded", config);
 
         assertEquals("Should have 1 context", 1, config.context.size());
@@ -33,9 +33,9 @@ public class ConfigTest {
         assertEquals("context should have 2 folders", 2, context.folder.size());
         Folder folder = context.folder.get(0);
 
-        assertEquals("folder path", "/example-drop", folder.folderPath);
-        assertEquals("move path", "/config", folder.moveDestination);
-        assertEquals("queue", "noaudit.sample-tracking", folder.queueName);
+        assertEquals("folder path", "/example-drop", folder.monitorDirectory);
+        assertEquals("move path", "/config", folder.moveDirectory);
+        assertEquals("queue", "noaudit.sample-tracking", folder.bindingKey);
         assertEquals("2 headers", 2, folder.headers.header.size());
 
         Header header = folder.headers.header.get(0);

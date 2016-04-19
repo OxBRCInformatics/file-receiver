@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" version="1.0">
-  <xs:element name="config">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:jaxb="http://java.sun.com/xml/ns/jaxb" version="1.0"
+           targetNamespace="http://www.filereceive.gel.softeng.ox/1.0.1" xmlns="http://www.filereceive.gel.softeng.ox/1.0.1"
+           elementFormDefault="qualified"
+           jaxb:version="2.0">
+  <xs:annotation>
+    <xs:appinfo>
+      <jaxb:schemaBindings>
+        <jaxb:package name="ox.softeng.gel.filereceive.config"/>
+      </jaxb:schemaBindings>
+    </xs:appinfo>
+  </xs:annotation>
+  <xs:element name="configuration">
     <xs:complexType>
       <xs:sequence>
         <xs:element name="context" minOccurs="1" maxOccurs="unbounded" type="context"/>
@@ -9,31 +19,38 @@
   </xs:element>
   <xs:complexType name="context">
     <xs:sequence>
-      <xs:element name="folder" minOccurs="0" maxOccurs="unbounded" type="folder"/>
+      <xs:element name="folder" minOccurs="1" maxOccurs="unbounded" type="folder"/>
     </xs:sequence>
+    <xs:attribute name="exchange" type="xs:string"/>
+    <xs:attribute name="refreshFrequency" type="xs:nonNegativeInteger"/>
     <xs:attribute name="path" type="xs:string" default="/"/>
   </xs:complexType>
+  <xs:simpleType name="action">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="COPY"/>
+      <xs:enumeration value="MOVE"/>
+    </xs:restriction>
+  </xs:simpleType>
   <xs:complexType name="folder">
     <xs:sequence>
-      <xs:element type="xs:string" name="folderPath"/>
-      <xs:element type="xs:string" name="moveDestination"/>
-      <xs:element type="xs:string" name="queueName"/>
-      <xs:element name="headers" type="headers"/>
+      <xs:element type="xs:string" name="monitorDirectory"/>
+      <xs:element type="xs:string" name="moveDirectory"/>
+      <xs:element name="bindingKey" type="xs:string"/>
+      <xs:element name="headers" type="headers" minOccurs="0"/>
     </xs:sequence>
+    <xs:attribute default="MOVE" name="action" type="action"/>
+    <xs:attribute name="refreshFrequency" type="xs:nonNegativeInteger"/>
+    <xs:attribute name="exchange" type="xs:string"/>
   </xs:complexType>
-
   <xs:complexType name="headers">
     <xs:sequence>
       <xs:element name="header" maxOccurs="unbounded" type="header"/>
     </xs:sequence>
   </xs:complexType>
-
   <xs:complexType name="header">
     <xs:sequence>
       <xs:element type="xs:string" name="key"/>
       <xs:element type="xs:string" name="value"/>
     </xs:sequence>
   </xs:complexType>
-
-
 </xs:schema>

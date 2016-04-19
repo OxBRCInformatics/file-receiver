@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<config>
-  <context path="/sftp-folders">
+<configuration xmlns="http://www.filereceive.gel.softeng.ox/1.0.1">
+  <context path="/sftp-folders" exchange="big">
     <folder>
-      <folderPath>/example-drop</folderPath>
-      <moveDestination>/config</moveDestination>
-      <queueName>noaudit.sample-tracking</queueName>
+      <monitorDirectory>/example-drop</monitorDirectory>
+      <moveDirectory>/config</moveDirectory>
+      <bindingKey>noaudit.sample-tracking</bindingKey>
       <headers>
         <header>
           <key>myHeader1</key>
@@ -16,20 +16,10 @@
         </header>
       </headers>
     </folder>
-    <folder>
-      <folderPath>/example-drop2</folderPath>
-      <moveDestination>/config</moveDestination>
-      <queueName>audit.sample-tracking</queueName>
-      <headers>
-        <header>
-          <key>myHeader1</key>
-          <value>myValue1</value>
-        </header>
-        <header>
-          <key>myHeader2</key>
-          <value>myValue2</value>
-        </header>
-      </headers>
+    <folder action="COPY" exchange="test" refreshFrequency="5">
+      <monitorDirectory>/example-drop2</monitorDirectory>
+      <moveDirectory>/config</moveDirectory>
+      <bindingKey>audit.sample-tracking</bindingKey>
     </folder>
   </context>
-</config>
+</configuration>
