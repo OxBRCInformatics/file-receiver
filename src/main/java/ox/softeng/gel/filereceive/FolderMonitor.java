@@ -3,9 +3,14 @@ package ox.softeng.gel.filereceive;
 import ox.softeng.burst.domain.Severity;
 import ox.softeng.burst.services.MessageDTO;
 import ox.softeng.burst.services.MessageDTO.Metadata;
+import ox.softeng.gel.filereceive.config.Action;
 import ox.softeng.gel.filereceive.config.Folder;
 import ox.softeng.gel.filereceive.config.Header;
+import ox.softeng.gel.filereceive.utils.Utils;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -26,19 +31,21 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class FolderMonitor implements Runnable {
 
-    static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_hh-mm-ss_SSS");
     private static final Logger logger = LoggerFactory.getLogger(FolderMonitor.class);
     Channel channel;
+    LoadingCache<Path, Path> copyCache;
     HashMap<Path, Long> fileSizes;
     HashMap<Path, FileTime> lastModified;
     Path monitorDir;
     Path moveDir;
     Long refreshTime;
     HashMap<Path, LocalDateTime> timeDiscovered;
+    private Action action;
     private JAXBContext burstMessageContext;
     private String burstQueue;
     private Connection connection;
@@ -46,16 +53,18 @@ public class FolderMonitor implements Runnable {
     private String exchangeName;
     private Folder folder;
 
+
     public FolderMonitor(Connection connection, String contextPath, Folder folder, String exchangeName, String burstQueue, Long refreshTime)
             throws JAXBException, IOException {
 
         this.connection = connection;
         this.contextPath = contextPath;
         this.folder = folder;
-
-        this.exchangeName = exchangeName;
         this.burstQueue = burstQueue;
-        this.refreshTime = refreshTime;
+
+        this.refreshTime = folder.getRefreshFrequency() == null ? refreshTime : folder.getRefreshFrequency().longValue();
+        this.exchangeName = folder.getExchange() == null ? exchangeName : folder.getExchange();
+        this.action = folder.getAction();
 
         fileSizes = new HashMap<>();
         lastModified = new HashMap<>();
@@ -74,6 +83,9 @@ public class FolderMonitor implements Runnable {
             logger.warn("Creating 'Move' folder as does not exist: {}", moveDir);
             Files.createDirectories(moveDir);
         }
+
+        if (this.action == Action.COPY) initialiseCache();
+
         logger.debug("Monitor directory type: " + Files.getFileStore(monitorDir).type());
     }
 
@@ -156,6 +168,14 @@ public class FolderMonitor implements Runnable {
 
     boolean processFile(Path path, LocalDateTime currentTime) throws IOException, TimeoutException, JAXBException {
 
+        // Just make sure we don't reprocess a file that's been cached
+        if (action == Action.COPY) {
+            try {
+                copyCache.get(path);
+                return false;
+            } catch (Exception ignored) {}
+        }
+
         logger.debug("Handling file " + path);
         byte[] message = Files.readAllBytes(path);
 
@@ -174,16 +194,15 @@ public class FolderMonitor implements Runnable {
         // Log that the message and success message have gone
         logger.debug("Sent {} and success to rabbitmq queues '{}' and '{}'", path, burstQueue, folder.getBindingKey());
 
-        // Resolve the path against the moveDir to handle sub directories and get the resulting parent folder
-        Path moveFolder = moveDir.resolve(monitorDir.relativize(path)).getParent();
-        Files.createDirectories(moveFolder);
-
-        String ext = com.google.common.io.Files.getFileExtension(filename);
-        String renameFilename = filename.replace("." + ext, "." + currentTime.format(dateTimeFormatter) + "." + ext);
-        Path moveFile = Paths.get(moveFolder.toString(), renameFilename);
-
-        logger.debug("Renaming to " + moveFile);
-        Files.move(path, moveFile);
+        // Perform move or copy
+        switch (this.action) {
+            case MOVE:
+                moveFile(path, Utils.resolvePath(path, monitorDir, moveDir, currentTime));
+                break;
+            case COPY:
+                copyFile(path, Utils.resolvePath(path, monitorDir, moveDir));
+                break;
+        }
 
         logger.info("Processed file: {}", path);
         return true;
@@ -197,6 +216,13 @@ public class FolderMonitor implements Runnable {
                 public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 
                     if (Files.isHidden(file)) return FileVisitResult.CONTINUE;
+
+                    if (action == Action.COPY) {
+                        try {
+                            copyCache.get(file);
+                            return FileVisitResult.CONTINUE;
+                        } catch (Exception ignored) {}
+                    }
                     // If we've not seen this file before
                     if (!lastModified.containsKey(file)) {
                         try {
@@ -282,6 +308,12 @@ public class FolderMonitor implements Runnable {
         return buildMessage("Uploaded a file with the name '" + filename + "'", filename, Severity.NOTICE, "File Receipt");
     }
 
+    private void copyFile(Path location, Path destination) throws IOException {
+        logger.debug("Copying to " + destination);
+        Files.copy(location, destination);
+        copyCache.put(location, destination);
+    }
+
     private String determineContentType(String filename) {
         String ext = com.google.common.io.Files.getFileExtension(filename);
 
@@ -309,6 +341,41 @@ public class FolderMonitor implements Runnable {
         try {
             sendBurstMessage(buildRabbitProperties(filename), buildErrorMessage(filename, throwable));
         } catch (IOException | JAXBException ignored) {}
+    }
+
+    private void initialiseCache() {
+        copyCache = CacheBuilder.newBuilder()
+                .maximumSize(10000)
+                .expireAfterAccess(7, TimeUnit.DAYS)
+                .build(
+                        new CacheLoader<Path, Path>() {
+                            @Override
+                            public Path load(Path key) throws Exception {
+                                Path p = Utils.resolvePath(key, monitorDir, moveDir);
+                                if (Files.exists(p)) return p;
+                                throw new Exception("Path does not exist so not cached");
+                            }
+                        });
+
+        try {
+            Files.walkFileTree(moveDir, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                    if (Files.isHidden(file)) return FileVisitResult.CONTINUE;
+                    copyCache.put(Utils.resolvePath(file, moveDir, monitorDir), file);
+                    return FileVisitResult.CONTINUE;
+                }
+            });
+        } catch (IOException e) {
+            handleException(monitorDir, "Failed to scan directory " + monitorDir + " because {}", e);
+        }
+
+    }
+
+    private void moveFile(Path location, Path destination) throws IOException {
+        logger.debug("Renaming to " + destination);
+        Files.createDirectories(destination.getParent());
+        Files.move(location, destination);
     }
 
     private void processFiles(Collection<Path> paths, LocalDateTime currentTime) {

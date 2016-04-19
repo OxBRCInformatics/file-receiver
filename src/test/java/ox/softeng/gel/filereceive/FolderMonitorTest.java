@@ -1,6 +1,8 @@
 package ox.softeng.gel.filereceive;
 
+import ox.softeng.gel.filereceive.config.Action;
 import ox.softeng.gel.filereceive.config.Folder;
+import ox.softeng.gel.filereceive.utils.Utils;
 
 import com.rabbitmq.client.Channel;
 import org.junit.AfterClass;
@@ -91,6 +93,34 @@ public class FolderMonitorTest {
     }
 
     @Test
+    public void handlingFileCopyShouldNotRecopyWhenFileHasAlreadyBeenProcessed() throws Exception {
+
+        folder.setAction(Action.COPY);
+        fm = new FolderMonitor(null, TEMP_TEST_FOLDER, folder, "testexc", "burst-queue", -1L);
+        fm.channel = mock(Channel.class);
+        Path tempFile = Files.createTempFile(fm.monitorDir, "test.", ".xml");
+        String content = "hello";
+        Files.write(tempFile, content.getBytes());
+        String filename = tempFile.getFileName().toString();
+
+        boolean result = fm.processFile(tempFile, time);
+        verify(fm.channel).basicPublish(eq("testexc"), eq("burst-queue"), any(), any());
+        verify(fm.channel).basicPublish(eq("testexc"), eq("test-queue"), any(), any());
+        assertTrue("Should have processed correctly", result);
+        assertTrue("tempfile should still exist", Files.exists(tempFile));
+        assertTrue("copied temp file should exist", Files.exists(Paths.get(fm.moveDir.toString(), filename)));
+
+        time = LocalDateTime.now();
+
+        result = fm.processFile(tempFile, time);
+        verify(fm.channel, times(1)).basicPublish(eq("testexc"), eq("burst-queue"), any(), any());
+        verify(fm.channel, times(1)).basicPublish(eq("testexc"), eq("test-queue"), any(), any());
+        assertFalse("Should not have processed 2", result);
+        assertTrue("tempfile should still exist 2", Files.exists(tempFile));
+        assertTrue("copied temp file should exist 2", Files.exists(Paths.get(fm.moveDir.toString(), filename)));
+    }
+
+    @Test
     public void handlingFileShouldCopeWithNestedFolders() throws Exception {
 
         fm = new FolderMonitor(null, TEMP_TEST_FOLDER, folder, "testexc", "burst-queue", -1L);
@@ -100,7 +130,7 @@ public class FolderMonitorTest {
         Path tempFile2 = Files.createTempFile(tempFolder, "test2.", ".xml");
         String filename = tempFile2.getFileName().toString();
         String ext = com.google.common.io.Files.getFileExtension(filename);
-        String renameFilename = filename.replace("." + ext, "." + time.format(FolderMonitor.dateTimeFormatter) + "." + ext);
+        String renameFilename = filename.replace("." + ext, "." + time.format(Utils.DATE_TIME_FORMATTER) + "." + ext);
 
         boolean result = fm.processFile(tempFile2, time);
 
@@ -114,6 +144,26 @@ public class FolderMonitorTest {
     }
 
     @Test
+    public void handlingFileShouldHandleCopyingSingleFileWithoutRename() throws Exception {
+
+        folder.setAction(Action.COPY);
+        fm = new FolderMonitor(null, TEMP_TEST_FOLDER, folder, "testexc", "burst-queue", -1L);
+        fm.channel = mock(Channel.class);
+        Path tempFile = Files.createTempFile(fm.monitorDir, "test.", ".xml");
+        String content = "hello";
+        Files.write(tempFile, content.getBytes());
+        String filename = tempFile.getFileName().toString();
+
+        boolean result = fm.processFile(tempFile, time);
+        verify(fm.channel).basicPublish(eq("testexc"), eq("burst-queue"), any(), any());
+        verify(fm.channel).basicPublish(eq("testexc"), eq("test-queue"), any(), any());
+        assertTrue("Should have processed correctly", result);
+        assertTrue("tempfile should still exist", Files.exists(tempFile));
+
+        assertTrue("copied temp file should exist", Files.exists(Paths.get(fm.moveDir.toString(), filename)));
+    }
+
+    @Test
     public void handlingFileShouldHandleSingleFile() throws Exception {
 
         fm = new FolderMonitor(null, TEMP_TEST_FOLDER, folder, "testexc", "burst-queue", -1L);
@@ -123,7 +173,7 @@ public class FolderMonitorTest {
         Files.write(tempFile, content.getBytes());
         String filename = tempFile.getFileName().toString();
         String ext = com.google.common.io.Files.getFileExtension(filename);
-        String renameFilename = filename.replace("." + ext, "." + time.format(FolderMonitor.dateTimeFormatter) + "." + ext);
+        String renameFilename = filename.replace("." + ext, "." + time.format(Utils.DATE_TIME_FORMATTER) + "." + ext);
 
         boolean result = fm.processFile(tempFile, time);
         verify(fm.channel).basicPublish(eq("testexc"), eq("burst-queue"), any(), any());
@@ -157,7 +207,7 @@ public class FolderMonitorTest {
         Files.write(tempFile, content.getBytes());
         String filename = tempFile.getFileName().toString();
         String ext = com.google.common.io.Files.getFileExtension(filename);
-        String renameFilename = filename.replace("." + ext, "." + time.format(FolderMonitor.dateTimeFormatter) + "." + ext);
+        String renameFilename = filename.replace("." + ext, "." + time.format(Utils.DATE_TIME_FORMATTER) + "." + ext);
 
         boolean result = fm.processFile(tempFile, time);
         verify(fm.channel).basicPublish(eq("testexc"), eq("burst-queue"), any(), any());
@@ -174,6 +224,69 @@ public class FolderMonitorTest {
         assertTrue("Should have processed correctly", result);
         assertFalse("tempfile should no longer exist", Files.exists(tempFile));
         assertTrue("moved temp file should exist", Files.exists(Paths.get(fm.moveDir.toString(), renameFilename)));
+    }
+
+    @Test
+    public void scanningDirectoriesForCopyShouldPickupExpectedFiles() throws Exception {
+
+        folder.setAction(Action.COPY);
+        fm = new FolderMonitor(null, TEMP_TEST_FOLDER, folder, null, null, 0L);
+
+        fm.scanMonitorDirectory(LocalDateTime.now());
+
+        assertTrue("Should have no files", fm.fileSizes.isEmpty());
+        assertTrue("Should have no files", fm.lastModified.isEmpty());
+        assertTrue("Should have no files", fm.timeDiscovered.isEmpty());
+
+        Path ignoreFile = Files.createTempFile(fm.monitorDir, "ignore.", ".xml");
+
+        fm.copyCache.put(ignoreFile, Utils.resolvePath(ignoreFile, fm.monitorDir, fm.moveDir));
+
+        fm.scanMonitorDirectory(time);
+
+        assertTrue("Should have no files", fm.fileSizes.isEmpty());
+        assertTrue("Should have no files", fm.lastModified.isEmpty());
+        assertTrue("Should have no files", fm.timeDiscovered.isEmpty());
+
+        Path tempFile = Files.createTempFile(fm.monitorDir, "test.", ".xml");
+
+        fm.scanMonitorDirectory(time);
+
+        assertFalse("Should have a file", fm.fileSizes.isEmpty());
+        assertFalse("Should have a file", fm.lastModified.isEmpty());
+        assertFalse("Should have a file", fm.timeDiscovered.isEmpty());
+
+        assertEquals("Should have a file with correct size", Files.size(tempFile), fm.fileSizes.get(tempFile).longValue());
+        assertEquals("Should have a file with same modified date", Files.getLastModifiedTime(tempFile), fm.lastModified.get(tempFile));
+        assertEquals("Should have the correct time discovered", time, fm.timeDiscovered.get(tempFile));
+
+        fm.scanMonitorDirectory(time);
+
+        assertEquals("Should still have 1 file", 1, fm.fileSizes.size());
+        assertEquals("Should still have 1 file", 1, fm.lastModified.size());
+        assertEquals("Should still have 1 file", 1, fm.timeDiscovered.size());
+
+        assertEquals("Should have a file with correct size", Files.size(tempFile), fm.fileSizes.get(tempFile).longValue());
+        assertEquals("Should have a file with same modified date", Files.getLastModifiedTime(tempFile), fm.lastModified.get(tempFile));
+        assertEquals("Should have the correct time discovered", time, fm.timeDiscovered.get(tempFile));
+    }
+
+    @Test
+    public void scanningDirectoriesForCopyWithExistingFilesShouldPickupExpectedFiles() throws Exception {
+
+        folder.setAction(Action.COPY);
+
+        Path dest = Paths.get(TEMP_TEST_FOLDER, folder.getMoveDirectory());
+        Files.createDirectories(dest);
+        Files.createTempFile(dest, "ignore.", ".xml");
+
+        fm = new FolderMonitor(null, TEMP_TEST_FOLDER, folder, null, null, 0L);
+
+        fm.scanMonitorDirectory(LocalDateTime.now());
+
+        assertTrue("Should have no files", fm.fileSizes.isEmpty());
+        assertTrue("Should have no files", fm.lastModified.isEmpty());
+        assertTrue("Should have no files", fm.timeDiscovered.isEmpty());
     }
 
     @Test

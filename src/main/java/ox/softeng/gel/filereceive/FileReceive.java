@@ -144,12 +144,13 @@ public class FileReceive {
             Connection connection = factory.newConnection();
 
             Long refresh = c.getRefreshFrequency() == null ? refreshTime : c.getRefreshFrequency().longValue();
+            String exchange = c.getExchange() == null ? exchangeName : c.getExchange();
 
             int count = 0;
             for (Folder f : c.getFolder()) {
                 Path monitorDir = Paths.get(c.getPath(), f.getMonitorDirectory());
                 try {
-                    FolderMonitor fm = new FolderMonitor(connection, c.getPath(), f, exchangeName, burstQueue, refresh);
+                    FolderMonitor fm = new FolderMonitor(connection, c.getPath(), f, exchange, burstQueue, refresh);
                     logger.debug("Created folder monitor for {}", monitorDir);
 
                     new Thread(fm).start();
