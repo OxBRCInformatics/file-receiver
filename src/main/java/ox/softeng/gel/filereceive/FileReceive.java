@@ -1,6 +1,6 @@
 package ox.softeng.gel.filereceive;
 
-import ox.softeng.gel.filereceive.config.Config;
+import ox.softeng.gel.filereceive.config.Configuration;
 import ox.softeng.gel.filereceive.config.Context;
 import ox.softeng.gel.filereceive.config.Folder;
 
@@ -24,7 +24,7 @@ public class FileReceive {
     private static final Logger logger = LoggerFactory.getLogger(FileReceive.class);
     private static final CommandLineParser parser = new DefaultParser();
     private String burstQueue;
-    private Config config;
+    private Configuration config;
     private String exchangeName;
     private ConnectionFactory factory;
     private Long refreshTime;
@@ -56,8 +56,8 @@ public class FileReceive {
         factory.setPort(port);
 
         File configFile = new File(configFilename);
-        Unmarshaller unmarshaller = JAXBContext.newInstance(Config.class).createUnmarshaller();
-        config = (Config) unmarshaller.unmarshal(configFile);
+        Unmarshaller unmarshaller = JAXBContext.newInstance(Configuration.class).createUnmarshaller();
+        config = (Configuration) unmarshaller.unmarshal(configFile);
     }
 
     private static Options defineMainOptions() {
@@ -143,21 +143,24 @@ public class FileReceive {
             // One connection for each context
             Connection connection = factory.newConnection();
 
+            Long refresh = c.getRefreshFrequency() == null ? refreshTime : c.getRefreshFrequency().longValue();
+            String exchange = c.getExchange() == null ? exchangeName : c.getExchange();
+
             int count = 0;
             for (Folder f : c.getFolder()) {
-                Path folderPath = Paths.get(c.getPath(), f.getFolderPath());
+                Path monitorDir = Paths.get(c.getPath(), f.getMonitorDirectory());
                 try {
-                    FolderMonitor fm = new FolderMonitor(connection, c.getPath(), f, exchangeName, burstQueue, refreshTime);
-                    logger.debug("Created folder monitor for {}", folderPath);
+                    FolderMonitor fm = new FolderMonitor(connection, c.getPath(), f, exchange, burstQueue, refresh);
+                    logger.debug("Created folder monitor for {}", monitorDir);
 
                     new Thread(fm).start();
                     count++;
                 } catch (JAXBException | IOException e) {
                     logger.error("Could not create folder monitor for folder {} because: {}",
-                                 folderPath, e.getMessage());
+                                 monitorDir, e.getMessage());
                     e.printStackTrace();
                 }
-                logger.debug("Started monitoring for folder: {}", folderPath);
+                logger.debug("Started monitoring for folder: {}", monitorDir);
             }
             logger.info("Started {} folder monitors for context {}", count, c.getPath());
         }
