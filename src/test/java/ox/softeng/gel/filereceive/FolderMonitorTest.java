@@ -1,7 +1,6 @@
 package ox.softeng.gel.filereceive;
 
 import ox.softeng.gel.filereceive.config.Folder;
-import ox.softeng.gel.filereceive.config.Headers;
 
 import com.rabbitmq.client.Channel;
 import org.junit.AfterClass;
@@ -83,8 +82,8 @@ public class FolderMonitorTest {
         assertFalse("The search folder should not exist", Files.exists(Paths.get(TEMP_TEST_FOLDER, testName.toString(), "find")));
         assertFalse("The move folder should not exist", Files.exists(Paths.get(TEMP_TEST_FOLDER, testName.toString(), "move")));
 
-        folder.setFolderPath("/" + testName.toString() + "/find");
-        folder.setMoveDestination("/" + testName.toString() + "/move");
+        folder.setMonitorDirectory("/" + testName.toString() + "/find");
+        folder.setMoveDirectory("/" + testName.toString() + "/move");
         fm = new FolderMonitor(null, TEMP_TEST_FOLDER, folder, null, null, 0L);
 
         assertTrue("The search folder should exist", Files.exists(fm.monitorDir));
@@ -237,10 +236,9 @@ public class FolderMonitorTest {
     public void setUp() throws Exception {
         testName = UUID.randomUUID();
         folder = new Folder();
-        folder.setFolderPath(testName.toString() + "/find");
-        folder.setMoveDestination(testName.toString() + "/move");
-        folder.setQueueName("test-queue");
-        folder.setHeaders(new Headers());
+        folder.setMonitorDirectory(testName.toString() + "/find");
+        folder.setMoveDirectory(testName.toString() + "/move");
+        folder.setBindingKey("test-queue");
 
         time = LocalDateTime.now();
     }

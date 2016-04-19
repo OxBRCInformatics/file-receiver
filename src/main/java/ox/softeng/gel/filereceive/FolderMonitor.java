@@ -40,10 +40,10 @@ public class FolderMonitor implements Runnable {
     Long refreshTime;
     HashMap<Path, LocalDateTime> timeDiscovered;
     private JAXBContext burstMessageContext;
-    private String burstQueue; // "noaudit.burst"
+    private String burstQueue;
     private Connection connection;
     private String contextPath;
-    private String exchangeName; // "Carfax"
+    private String exchangeName;
     private Folder folder;
 
     public FolderMonitor(Connection connection, String contextPath, Folder folder, String exchangeName, String burstQueue, Long refreshTime)
@@ -53,8 +53,8 @@ public class FolderMonitor implements Runnable {
         this.contextPath = contextPath;
         this.folder = folder;
 
-        this.exchangeName = exchangeName; // "Carfax"
-        this.burstQueue = burstQueue; // "noaudit.burst"
+        this.exchangeName = exchangeName;
+        this.burstQueue = burstQueue;
         this.refreshTime = refreshTime;
 
         fileSizes = new HashMap<>();
@@ -63,8 +63,8 @@ public class FolderMonitor implements Runnable {
 
         burstMessageContext = JAXBContext.newInstance(MessageDTO.class);
 
-        monitorDir = Paths.get(contextPath, folder.getFolderPath());
-        moveDir = Paths.get(contextPath, folder.getMoveDestination());
+        monitorDir = Paths.get(contextPath, folder.getMonitorDirectory());
+        moveDir = Paths.get(contextPath, folder.getMoveDirectory());
 
         if (!Files.exists(monitorDir)) {
             logger.warn("Creating 'Monitor' folder as does not exist: {}", monitorDir);
@@ -164,15 +164,15 @@ public class FolderMonitor implements Runnable {
         AMQP.BasicProperties basicProperties = buildRabbitProperties(filename);
 
         // Send to folder queue
-        logger.trace("Sending to rabbitmq queue '{}'", folder.getQueueName());
-        channel.basicPublish(exchangeName, folder.getQueueName(), basicProperties, message);
+        logger.trace("Sending to rabbitmq queue '{}'", folder.getBindingKey());
+        channel.basicPublish(exchangeName, folder.getBindingKey(), basicProperties, message);
 
         // Send to burst
         logger.trace("Sending success message to rabbitmq queue '{}'", burstQueue);
         sendBurstMessage(basicProperties, buildSuccessMessage(filename));
 
         // Log that the message and success message have gone
-        logger.debug("Sent {} and success to rabbitmq queues '{}' and '{}'", path, burstQueue, folder.getQueueName());
+        logger.debug("Sent {} and success to rabbitmq queues '{}' and '{}'", path, burstQueue, folder.getBindingKey());
 
         // Resolve the path against the moveDir to handle sub directories and get the resulting parent folder
         Path moveFolder = moveDir.resolve(monitorDir.relativize(path)).getParent();
@@ -230,10 +230,12 @@ public class FolderMonitor implements Runnable {
         burstMessage.setSeverity(severity);
         burstMessage.setSource("Folder Monitoring System");
         String GMCName = "Unknown GMC";
-        for (Header h : folder.getHeaders().getHeader()) {
-            if ("GMC".equalsIgnoreCase(h.getKey())) {
-                GMCName = h.getValue();
-                break;
+        if (folder.getHeaders() != null) {
+            for (Header h : folder.getHeaders().getHeader()) {
+                if ("GMC".equalsIgnoreCase(h.getKey())) {
+                    GMCName = h.getValue();
+                    break;
+                }
             }
         }
         burstMessage.setDetails(GMCName + " has: " + details);
@@ -256,9 +258,7 @@ public class FolderMonitor implements Runnable {
         headerMap.put("directory", monitorDir.toString());
         headerMap.put("receivedDateTime", OffsetDateTime.now(ZoneId.of("UTC")).format(DateTimeFormatter.ISO_DATE_TIME));
 
-        for (Header h : folder.getHeaders().getHeader()) {
-            headerMap.put(h.getKey(), h.getValue());
-        }
+        if (folder.getHeaders() != null) folder.getHeaders().getHeader().forEach(it -> headerMap.put(it.getKey(), it.getValue()));
 
         AMQP.BasicProperties.Builder builder = new AMQP.BasicProperties().builder();
 
