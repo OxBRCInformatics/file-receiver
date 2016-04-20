@@ -310,6 +310,7 @@ public class FolderMonitor implements Runnable {
 
     private void copyFile(Path location, Path destination) throws IOException {
         logger.debug("Copying to " + destination);
+        Files.createDirectories(destination.getParent());
         Files.copy(location, destination);
         copyCache.put(location, destination);
     }
