@@ -54,6 +54,7 @@ public class FileReceive {
         factory = new ConnectionFactory();
         factory.setHost(rabbitMqHost);
         factory.setPort(port);
+        factory.setAutomaticRecoveryEnabled(true);
 
         File configFile = new File(configFilename);
         Unmarshaller unmarshaller = JAXBContext.newInstance(Configuration.class).createUnmarshaller();
