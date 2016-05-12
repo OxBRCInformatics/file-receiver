@@ -96,25 +96,27 @@ public class FolderMonitor implements Runnable {
             channel = connection.createChannel();
             channel.exchangeDeclare(exchangeName, "topic", true);
 
-            LocalDateTime currentTime = LocalDateTime.now();
+            while (true) {
+                LocalDateTime currentTime = LocalDateTime.now();
 
-            // First we'll go through and find any files to handle
-            logger.trace("Checking for files to handle");
-            Set<Path> filesToHandle = checkForFilesToHandle(currentTime);
+                // First we'll go through and find any files to handle
+                logger.trace("Checking for files to handle");
+                Set<Path> filesToHandle = checkForFilesToHandle(currentTime);
 
-            // Process any files to handle
-            logger.trace("Processing {} files", filesToHandle.size());
-            processFiles(filesToHandle, currentTime);
+                // Process any files to handle
+                logger.trace("Processing {} files", filesToHandle.size());
+                processFiles(filesToHandle, currentTime);
 
-            // Handle recursive/sub folders
-            logger.trace("Scanning {}", monitorDir);
-            scanMonitorDirectory(currentTime);
+                // Handle recursive/sub folders
+                logger.trace("Scanning {}", monitorDir);
+                scanMonitorDirectory(currentTime);
 
-            try {
-                // Sleep for a second
-                Thread.sleep(1000L);
-            } catch (InterruptedException e) {
-                logger.warn("Sleep broken because: {}", e.getMessage());
+                try {
+                    // Sleep for a second
+                    Thread.sleep(1000L);
+                } catch (InterruptedException e) {
+                    logger.warn("Sleep broken because: {}", e.getMessage());
+                }
             }
         } catch (IOException e) {
             handleException("Error running folder monitor: {}", e);
