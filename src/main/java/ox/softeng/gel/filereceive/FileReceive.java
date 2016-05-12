@@ -29,7 +29,8 @@ public class FileReceive {
     private ConnectionFactory factory;
     private Long refreshTime;
 
-    public FileReceive(String configFilename, String rabbitMqHost, Integer rabbitMqPort, String exchangeName, String burstQueue, Long refreshTime)
+    public FileReceive(String configFilename, String rabbitMqHost, Integer rabbitMqPort, String username, String password,
+                       String exchangeName, String burstQueue, Long refreshTime)
             throws JAXBException, IOException, TimeoutException {
 
         logger.info("Starting application version {}", System.getProperty("applicationVersion"));
@@ -43,9 +44,10 @@ public class FileReceive {
         logger.info("Using:\n" +
                     " - Config file: {}\n" +
                     " - RabbitMQ Server Host: {}:{}\n" +
+                    " - RabbitMQ User: {}:****\n" +
                     " - Exchange Name: {}\n" +
                     " - BuRST Queue Binding: {}\n" +
-                    " - Refresh Time: {} seconds", configFilename, rabbitMqHost, port, exchangeName, burstQueue, refreshTime);
+                    " - Refresh Time: {} seconds", configFilename, rabbitMqHost, port, username, exchangeName, burstQueue, refreshTime);
 
         this.refreshTime = refreshTime;
         this.exchangeName = exchangeName;
@@ -54,6 +56,9 @@ public class FileReceive {
         factory = new ConnectionFactory();
         factory.setHost(rabbitMqHost);
         factory.setPort(port);
+        factory.setUsername(username);
+        factory.setPassword(password);
+        factory.setAutomaticRecoveryEnabled(true);
 
         File configFile = new File(configFilename);
         Unmarshaller unmarshaller = JAXBContext.newInstance(Configuration.class).createUnmarshaller();
@@ -78,8 +83,20 @@ public class FileReceive {
                 Option.builder("p").longOpt("rabbitmq-port")
                         .argName("RABBITMQ_PORT")
                         .hasArg()
-                        .desc("[Optional] Port for the RabbitMQ server, default is 5672")
+                        .desc("[Optional] Port for the RabbitMQ server, default is " + ConnectionFactory.DEFAULT_AMQP_PORT)
                         .type(Number.class)
+                        .build());
+        options.addOption(
+                Option.builder("u").longOpt("rabbitmq-user")
+                        .argName("RABBITMQ_USER")
+                        .hasArg()
+                        .desc("[Optional] User for the RabbitMQ server, default is " + ConnectionFactory.DEFAULT_USER)
+                        .build());
+        options.addOption(
+                Option.builder("w").longOpt("rabbitmq-password")
+                        .argName("RABBITMQ_PASSWORD")
+                        .hasArg()
+                        .desc("[Optional] Password for the RabbitMQ server, default is " + ConnectionFactory.DEFAULT_PASS)
                         .build());
         options.addOption(
                 Option.builder("e").longOpt("exchange")
@@ -186,6 +203,8 @@ public class FileReceive {
                 FileReceive fr = new FileReceive(line.getOptionValue('c'),
                                                  line.getOptionValue('r'),
                                                  (Integer) line.getParsedOptionValue("p"),
+                                                 line.getOptionValue('u', ConnectionFactory.DEFAULT_USER),
+                                                 line.getOptionValue('w', ConnectionFactory.DEFAULT_PASS),
                                                  line.getOptionValue('e'),
                                                  line.getOptionValue('b'),
                                                  (Long) line.getParsedOptionValue("t"));
