@@ -10,14 +10,13 @@ import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.TimeoutException;
+
+import static ox.softeng.gel.filereceive.utils.Utils.loadConfig;
 
 public class FileReceive {
 
@@ -60,9 +59,7 @@ public class FileReceive {
         factory.setPassword(password);
         factory.setAutomaticRecoveryEnabled(true);
 
-        File configFile = new File(configFilename);
-        Unmarshaller unmarshaller = JAXBContext.newInstance(Configuration.class).createUnmarshaller();
-        config = (Configuration) unmarshaller.unmarshal(configFile);
+        config = loadConfig(configFilename);
     }
 
     private static Options defineMainOptions() {
