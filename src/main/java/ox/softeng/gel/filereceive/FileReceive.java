@@ -1,19 +1,29 @@
 package ox.softeng.gel.filereceive;
 
+import ox.softeng.burst.domain.SeverityEnum;
+import ox.softeng.burst.xml.MessageDTO;
 import ox.softeng.gel.filereceive.config.Configuration;
 import ox.softeng.gel.filereceive.config.Context;
 import ox.softeng.gel.filereceive.config.Folder;
 
+import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import org.apache.commons.cli.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.Date;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.concurrent.TimeoutException;
 
 import static ox.softeng.gel.filereceive.utils.Utils.loadConfig;
@@ -60,6 +70,45 @@ public class FileReceive {
         factory.setAutomaticRecoveryEnabled(true);
 
         config = loadConfig(configFilename);
+    }
+
+    public void generateStartupMessage() throws IOException {
+
+        try {
+            StringWriter writer;
+            MessageDTO message = new MessageDTO();
+            message.setSource("file-receiver");
+            message.setDetails("Burst Service starting\n" + version());
+            message.setSeverity(SeverityEnum.INFORMATIONAL);
+            message.setDateTimeCreated(OffsetDateTime.now(ZoneId.of("UTC")));
+            message.setTitle("File Receiver Startup");
+            message.addTopic("service");
+            message.addTopic("startup");
+            message.addTopic("file-receiver");
+            message.addMetadata("gmc", "gel");
+            message.addMetadata("file_receiver_service_version", version());
+
+            writer = new StringWriter();
+            getMarshaller().marshal(message, writer);
+
+            AMQP.BasicProperties.Builder builder = new AMQP.BasicProperties().builder();
+            builder.deliveryMode(2);
+            builder.contentType("text/xml");
+            builder.timestamp(Date.from(OffsetDateTime.now(ZoneId.systemDefault()).toInstant()));
+
+            Channel channel = factory.newConnection().createChannel();
+            channel.exchangeDeclare(exchangeName, "topic", true);
+            channel.basicPublish(exchangeName, burstQueue, builder.build(), writer.toString().getBytes());
+            channel.close();
+
+        } catch (JAXBException | TimeoutException ignored) {
+        }
+    }
+
+    Marshaller getMarshaller() throws JAXBException {
+        Marshaller marshaller = JAXBContext.newInstance(MessageDTO.class).createMarshaller();
+        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+        return marshaller;
     }
 
     private static Options defineMainOptions() {
@@ -118,6 +167,10 @@ public class FileReceive {
         return options;
     }
 
+    private static String fullVersion() {
+        return "file-receiver " + version();
+    }
+
     private static boolean hasSimpleOptions(String[] args) {
 
         Options options = new Options();
@@ -151,6 +204,8 @@ public class FileReceive {
 
     private void startMonitors() throws IOException, TimeoutException {
 
+        generateStartupMessage();
+
         for (Context c : config.getContext()) {
             logger.info("Starting {} folder monitors for context {}", c.getFolder().size(), c.getPath());
 
@@ -181,7 +236,7 @@ public class FileReceive {
     }
 
     private static String version() {
-        return "file-receiver version: \"" + FileReceive.class.getPackage().getSpecificationVersion() + "\"\n" +
+        return "Version: \"" + FileReceive.class.getPackage().getSpecificationVersion() + "\"\n" +
                "Java Version: \"" + System.getProperty("java.version") + "\"";
 
     }

@@ -1,8 +1,7 @@
 package ox.softeng.gel.filereceive;
 
-import ox.softeng.burst.domain.Severity;
-import ox.softeng.burst.services.MessageDTO;
-import ox.softeng.burst.services.MessageDTO.Metadata;
+import ox.softeng.burst.domain.SeverityEnum;
+import ox.softeng.burst.xml.MessageDTO;
 import ox.softeng.gel.filereceive.config.Action;
 import ox.softeng.gel.filereceive.config.Folder;
 import ox.softeng.gel.filereceive.config.Header;
@@ -243,10 +242,10 @@ public class FolderMonitor implements Runnable {
 
     private byte[] buildErrorMessage(String filename, Throwable throwable) throws JAXBException {
         return buildMessage("Encountered an exception with filename '" + filename + "':\n" + throwable.getMessage(),
-                            filename, Severity.ERROR, "File Receipt Failure", "Error");
+                            filename, SeverityEnum.ERROR, "File Receipt Failure", "Error");
     }
 
-    private byte[] buildMessage(String details, String filename, Severity severity, String... topics) throws JAXBException {
+    private byte[] buildMessage(String details, String filename, SeverityEnum severity, String... topics) throws JAXBException {
         MessageDTO burstMessage = new MessageDTO();
         burstMessage.setDateTimeCreated(OffsetDateTime.now());
         burstMessage.setSeverity(severity);
@@ -264,8 +263,8 @@ public class FolderMonitor implements Runnable {
         for (String topic : topics) {
             burstMessage.addTopic(topic);
         }
-        burstMessage.addMetadata(new Metadata("GMC", GMCName));
-        burstMessage.addMetadata(new Metadata("File name", filename));
+        burstMessage.addMetadata(new MessageDTO.Metadata("GMC", GMCName));
+        burstMessage.addMetadata(new MessageDTO.Metadata("File name", filename));
 
         Marshaller m = burstMessageContext.createMarshaller();
         m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
@@ -301,7 +300,7 @@ public class FolderMonitor implements Runnable {
     }
 
     private byte[] buildSuccessMessage(String filename) throws JAXBException {
-        return buildMessage("Uploaded a file with the name '" + filename + "'", filename, Severity.NOTICE, "File Receipt");
+        return buildMessage("Uploaded a file with the name '" + filename + "'", filename, SeverityEnum.NOTICE, "File Receipt");
     }
 
     private void copyFile(Path location, Path destination) throws IOException {
