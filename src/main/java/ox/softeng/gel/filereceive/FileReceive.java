@@ -183,7 +183,7 @@ public class FileReceive {
             // parse the command line arguments
             CommandLine line = parser.parse(options, args);
             if (line.hasOption("h")) help();
-            if (line.hasOption("v")) System.out.println(version());
+            if (line.hasOption("v")) System.out.println(fullVersion());
             ;
             return true;
         } catch (ParseException ignored) {}
