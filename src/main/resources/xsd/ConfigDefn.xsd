@@ -20,6 +20,7 @@
   <xs:complexType name="context">
     <xs:sequence>
       <xs:element name="folder" minOccurs="1" maxOccurs="unbounded" type="folder"/>
+      <xs:element maxOccurs="1" minOccurs="0" name="headers" type="headers"/>
     </xs:sequence>
     <xs:attribute name="exchange" type="xs:string"/>
     <xs:attribute name="refreshFrequency" type="xs:nonNegativeInteger"/>

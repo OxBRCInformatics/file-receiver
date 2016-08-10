@@ -23,6 +23,7 @@ import javax.xml.bind.annotation.XmlType;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;sequence>
  *         &lt;element name="folder" type="{http://www.filereceive.gel.softeng.ox/1.0.1}folder" maxOccurs="unbounded"/>
+ *         &lt;element name="headers" type="{http://www.filereceive.gel.softeng.ox/1.0.1}headers" minOccurs="0"/>
  *       &lt;/sequence>
  *       &lt;attribute name="exchange" type="{http://www.w3.org/2001/XMLSchema}string" />
  *       &lt;attribute name="refreshFrequency" type="{http://www.w3.org/2001/XMLSchema}nonNegativeInteger" />
@@ -36,12 +37,15 @@ import javax.xml.bind.annotation.XmlType;
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "context", namespace = "http://www.filereceive.gel.softeng.ox/1.0.1", propOrder = {
-    "folder"
+    "folder",
+    "headers"
 })
 public class Context {
 
     @XmlElement(namespace = "http://www.filereceive.gel.softeng.ox/1.0.1", required = true)
     protected List<Folder> folder;
+    @XmlElement(namespace = "http://www.filereceive.gel.softeng.ox/1.0.1")
+    protected Headers headers;
     @XmlAttribute(name = "exchange")
     protected String exchange;
     @XmlAttribute(name = "refreshFrequency")
@@ -77,6 +81,30 @@ public class Context {
             folder = new ArrayList<Folder>();
         }
         return this.folder;
+    }
+
+    /**
+     * Gets the value of the headers property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link Headers }
+     *     
+     */
+    public Headers getHeaders() {
+        return headers;
+    }
+
+    /**
+     * Sets the value of the headers property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link Headers }
+     *     
+     */
+    public void setHeaders(Headers value) {
+        this.headers = value;
     }
 
     /**

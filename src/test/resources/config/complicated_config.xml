@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration xmlns="http://www.filereceive.gel.softeng.ox/1.0.1">
+  <context path="/sftp-folders" exchange="big">
+    <folder>
+      <monitorDirectory>/example-drop</monitorDirectory>
+      <moveDirectory>/config</moveDirectory>
+      <bindingKey>noaudit.sample-tracking</bindingKey>
+      <headers>
+        <header>
+          <key>myHeader1</key>
+          <value>myValue1</value>
+        </header>
+        <header>
+          <key>myHeader2</key>
+          <value>myValue2</value>
+        </header>
+      </headers>
+    </folder>
+    <folder action="COPY" exchange="test" refreshFrequency="5">
+      <monitorDirectory>/example-drop2</monitorDirectory>
+      <moveDirectory>/config</moveDirectory>
+      <bindingKey>audit.sample-tracking</bindingKey>
+    </folder>
+    <headers>
+      <header>
+        <key>myHeader1</key>
+        <value>topValue1</value>
+      </header>
+      <header>
+        <key>topHeader</key>
+        <value>topValue</value>
+      </header>
+    </headers>
+  </context>
+  <context path="/sftp-folders2" exchange="big">
+    <folder>
+      <monitorDirectory>/example-drop</monitorDirectory>
+      <moveDirectory>/config</moveDirectory>
+      <bindingKey>noaudit.sample-tracking</bindingKey>
+    </folder>
+  </context>
+</configuration>
