@@ -300,7 +300,7 @@ public class FolderMonitor implements Runnable {
     }
 
     private byte[] buildSuccessMessage(String filename) throws JAXBException {
-        return buildMessage("Uploaded a file with the name '" + filename + "'", filename, SeverityEnum.NOTICE, "File Receipt");
+        return buildMessage("Uploaded a file with the name '" + filename + "'", filename, SeverityEnum.INFORMATIONAL, "File Receipt");
     }
 
     private void copyFile(Path location, Path destination) throws IOException {
