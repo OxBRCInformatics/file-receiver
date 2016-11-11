@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
  */
 public class Utils {
 
-    public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd_hh-mm-ss_SSS");
+    public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss_SSS");
 
     public static Configuration loadConfig(String configFilename) throws JAXBException {
         File configFile = new File(configFilename);

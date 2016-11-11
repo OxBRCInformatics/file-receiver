@@ -19,7 +19,6 @@ public class UtilsTest {
     private Path destination;
     private Path location;
     private UUID testName;
-    private LocalDateTime time;
 
     @Test
     public void resolvePath() throws Exception {
@@ -63,6 +62,44 @@ public class UtilsTest {
                      TEMP_TEST_FOLDER + "/" + testName + "/move/" + testPath + "." + now.format(Utils.DATE_TIME_FORMATTER) + ".xml",
                      result.toString());
 
+    }
+
+    public void resolvePathWithTimestampForLocaDateTime(LocalDateTime datetime) throws Exception {
+        String testPath = "test3";
+
+        Path tempFile = location.resolve(testPath + ".xml");
+        Path result = Utils.resolvePath(tempFile, location, destination, datetime);
+
+        System.out.println(tempFile);
+        System.out.println(result);
+        assertEquals("Simple file should resolve",
+                     TEMP_TEST_FOLDER + "/" + testName + "/move/" + testPath + "." + datetime.getYear() + "-" + datetime.getMonthValue() + "-" + datetime.getDayOfMonth() + "_" + datetime.getHour() + "-" + datetime.getMinute() + "-00_000" + ".xml",
+                     result.toString());
+        
+        testPath = "sub/anothersub/test";
+        tempFile = location.resolve(testPath + ".xml");
+        result = Utils.resolvePath(tempFile, location, destination, datetime);
+        System.out.println(tempFile);
+        System.out.println(result);
+        assertEquals("Simple file should resolve",
+                     TEMP_TEST_FOLDER + "/" + testName + "/move/" + testPath + "." + datetime.getYear() + "-" + datetime.getMonthValue() + "-" + datetime.getDayOfMonth() + "_" + datetime.getHour() + "-" + datetime.getMinute() + "-00_000" + ".xml",
+                     result.toString());
+    }
+
+    @Test
+    public void resolvePathWithTimestampAM() throws Exception {
+        int iYear = 2016, iMonth = 11, iDay = 12, iHour = 10, iMinute = 56;
+        LocalDateTime datetime = LocalDateTime.of(iYear, iMonth, iDay, iHour, iMinute);
+
+        resolvePathWithTimestampForLocaDateTime(datetime);
+    }
+
+    @Test
+    public void resolvePathWithTimestampPM() throws Exception {
+        int iYear = 2016, iMonth = 11, iDay = 12, iHour = 22, iMinute = 56;
+        LocalDateTime datetime = LocalDateTime.of(iYear, iMonth, iDay, iHour, iMinute);
+
+        resolvePathWithTimestampForLocaDateTime(datetime);
     }
 
     @Before
