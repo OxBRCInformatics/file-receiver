@@ -22,7 +22,11 @@ downloadLicenses {
     xml = false
     report.xml.enabled = false
     report.html.destination = file('license-report')
+}
 
+license {
+    includes(["**/*.java","**/*.groovy"])
+    excludes(['**/*Test.java', '**/*Test.groovy', '**/*Spec.groovy','*logback*.groovy'])
 }
 
 
