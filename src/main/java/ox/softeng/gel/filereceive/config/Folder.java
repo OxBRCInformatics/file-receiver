@@ -214,21 +214,21 @@ import java.math.BigInteger;
  * <p>The following schema fragment specifies the expected content contained within this class.
  * 
  * <pre>
- * &lt;complexType name="folder">
- *   &lt;complexContent>
- *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *       &lt;sequence>
- *         &lt;element name="monitorDirectory" type="{http://www.w3.org/2001/XMLSchema}string"/>
- *         &lt;element name="moveDirectory" type="{http://www.w3.org/2001/XMLSchema}string"/>
- *         &lt;element name="bindingKey" type="{http://www.w3.org/2001/XMLSchema}string"/>
- *         &lt;element name="headers" type="{http://www.filereceive.gel.softeng.ox/1.0.1}headers" minOccurs="0"/>
- *       &lt;/sequence>
- *       &lt;attribute name="action" type="{http://www.filereceive.gel.softeng.ox/1.0.1}action" default="MOVE" />
- *       &lt;attribute name="refreshFrequency" type="{http://www.w3.org/2001/XMLSchema}nonNegativeInteger" />
- *       &lt;attribute name="exchange" type="{http://www.w3.org/2001/XMLSchema}string" />
- *     &lt;/restriction>
- *   &lt;/complexContent>
- * &lt;/complexType>
+ * &lt;complexType name="folder"&gt;
+ *   &lt;complexContent&gt;
+ *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
+ *       &lt;sequence&gt;
+ *         &lt;element name="monitorDirectory" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="moveDirectory" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="bindingKey" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
+ *         &lt;element name="headers" type="{http://www.filereceive.gel.softeng.ox/1.0.1}headers" minOccurs="0"/&gt;
+ *       &lt;/sequence&gt;
+ *       &lt;attribute name="action" type="{http://www.filereceive.gel.softeng.ox/1.0.1}action" default="MOVE" /&gt;
+ *       &lt;attribute name="refreshFrequency" type="{http://www.w3.org/2001/XMLSchema}nonNegativeInteger" /&gt;
+ *       &lt;attribute name="exchange" type="{http://www.w3.org/2001/XMLSchema}string" /&gt;
+ *     &lt;/restriction&gt;
+ *   &lt;/complexContent&gt;
+ * &lt;/complexType&gt;
  * </pre>
  * 
  * 

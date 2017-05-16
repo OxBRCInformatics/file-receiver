@@ -241,7 +241,7 @@ public class FileReceive {
     private ConnectionFactory factory;
     private Long refreshTime;
 
-    public FileReceive(String configFilename, String rabbitMqHost, Integer rabbitMqPort, String username, String password,
+    public FileReceive(String configFilename, String rabbitMqHost, Long rabbitMqPort, String username, String password,
                        String exchangeName, String burstQueue, Long refreshTime)
             throws JAXBException, IOException, TimeoutException {
 
@@ -251,7 +251,7 @@ public class FileReceive {
         if (System.getenv("FILE_RECEIVER_VERSION") != null)
             logger.info("Docker container build version {}", System.getenv("FILE_RECEIVER_VERSION"));
 
-        Integer port = rabbitMqPort != null ? rabbitMqPort : ConnectionFactory.DEFAULT_AMQP_PORT;
+        Long port = rabbitMqPort != null ? rabbitMqPort : ConnectionFactory.DEFAULT_AMQP_PORT;
 
         logger.info("Using:\n" +
                     " - Config file: {}\n" +
@@ -267,7 +267,7 @@ public class FileReceive {
 
         factory = new ConnectionFactory();
         factory.setHost(rabbitMqHost);
-        factory.setPort(port);
+        factory.setPort(port.intValue());
         factory.setUsername(username);
         factory.setPassword(password);
         factory.setAutomaticRecoveryEnabled(true);
@@ -457,7 +457,7 @@ public class FileReceive {
             try {
                 FileReceive fr = new FileReceive(line.getOptionValue('c'),
                                                  line.getOptionValue('r'),
-                                                 (Integer) line.getParsedOptionValue("p"),
+                                                 (Long) line.getParsedOptionValue("p"),
                                                  line.getOptionValue('u', ConnectionFactory.DEFAULT_USER),
                                                  line.getOptionValue('w', ConnectionFactory.DEFAULT_PASS),
                                                  line.getOptionValue('e'),

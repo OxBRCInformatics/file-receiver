@@ -234,6 +234,7 @@ public class ObjectFactory {
     /**
      * Create an instance of {@link Configuration }
      *
+     * @return new Configuration
      */
     public Configuration createConfiguration() {
         return new Configuration();
@@ -242,6 +243,7 @@ public class ObjectFactory {
     /**
      * Create an instance of {@link Context }
      *
+     * @return new Context
      */
     public Context createContext() {
         return new Context();
@@ -250,6 +252,7 @@ public class ObjectFactory {
     /**
      * Create an instance of {@link Folder }
      *
+     * @return new Folder
      */
     public Folder createFolder() {
         return new Folder();
@@ -258,6 +261,7 @@ public class ObjectFactory {
     /**
      * Create an instance of {@link Header }
      *
+     * @return new Header
      */
     public Header createHeader() {
         return new Header();
@@ -265,6 +269,8 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link Headers }
+     * 
+     * @return new Headers
      */
     public Headers createHeaders() {
         return new Headers();

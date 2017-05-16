@@ -215,19 +215,19 @@ import java.util.List;
  * <p>The following schema fragment specifies the expected content contained within this class.
  *
  * <pre>
- * &lt;complexType name="context">
- *   &lt;complexContent>
- *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *       &lt;sequence>
- *         &lt;element name="folder" type="{http://www.filereceive.gel.softeng.ox/1.0.1}folder" maxOccurs="unbounded"/>
- *         &lt;element name="headers" type="{http://www.filereceive.gel.softeng.ox/1.0.1}headers" minOccurs="0"/>
- *       &lt;/sequence>
- *       &lt;attribute name="exchange" type="{http://www.w3.org/2001/XMLSchema}string" />
- *       &lt;attribute name="refreshFrequency" type="{http://www.w3.org/2001/XMLSchema}nonNegativeInteger" />
- *       &lt;attribute name="path" type="{http://www.w3.org/2001/XMLSchema}string" default="/" />
- *     &lt;/restriction>
- *   &lt;/complexContent>
- * &lt;/complexType>
+ * &lt;complexType name="context"&gt;
+ *   &lt;complexContent&gt;
+ *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
+ *       &lt;sequence&gt;
+ *         &lt;element name="folder" type="{http://www.filereceive.gel.softeng.ox/1.0.1}folder" maxOccurs="unbounded"/&gt;
+ *         &lt;element name="headers" type="{http://www.filereceive.gel.softeng.ox/1.0.1}headers" minOccurs="0"/&gt;
+ *       &lt;/sequence&gt;
+ *       &lt;attribute name="exchange" type="{http://www.w3.org/2001/XMLSchema}string" /&gt;
+ *       &lt;attribute name="refreshFrequency" type="{http://www.w3.org/2001/XMLSchema}nonNegativeInteger" /&gt;
+ *       &lt;attribute name="path" type="{http://www.w3.org/2001/XMLSchema}string" default="/" /&gt;
+ *     &lt;/restriction&gt;
+ *   &lt;/complexContent&gt;
+ * &lt;/complexType&gt;
  * </pre>
  *
  *
@@ -289,7 +289,7 @@ public class Context {
      * Objects of the following type(s) are allowed in the list
      * {@link Folder }
      *
-     *
+     * @return List of Folder
      */
     public List<Folder> getFolder() {
         if (folder == null) {
