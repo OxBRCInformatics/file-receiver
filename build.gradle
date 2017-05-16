@@ -9,12 +9,29 @@ buildscript {
     }
 }
 
-apply plugin: 'java'
-apply plugin: 'maven'
+plugins {
+    id 'java'
+    id 'maven'
+    id 'idea'
+    id 'eclipse'
+    id 'application'
+    id 'com.github.hierynomus.license' version '0.13.1'
+}
+
+downloadLicenses {
+    xml = false
+    report.xml.enabled = false
+    report.html.destination = file('license-report')
+}
+
+license {
+    includes(["**/*.java","**/*.groovy"])
+    excludes(['**/*Test.java', '**/*Test.groovy', '**/*Spec.groovy','*logback*.groovy'])
+}
+
+
 apply plugin: 'com.jfrog.bintray'
-apply plugin: 'idea'
-apply plugin: 'eclipse'
-apply plugin: 'application'
+
 
 group = 'ox.softeng.gel'
 
