@@ -29,6 +29,9 @@ license {
     excludes(['**/*Test.java', '**/*Test.groovy', '**/*Spec.groovy','*logback*.groovy'])
 }
 
+task wrapper(type: Wrapper) {
+    gradleVersion = project.gradleVersion
+}
 
 apply plugin: 'com.jfrog.bintray'
 

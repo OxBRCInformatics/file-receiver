@@ -1,205 +1,134 @@
 /**
- *                                  Apache License
- *                            Version 2.0, January 2004
- *                         http://www.apache.org/licenses/
+ * Academic Use Licence
  *
- *    TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+ * These licence terms apply to all licences granted by
+ * OXFORD UNIVERSITY INNOVATION LIMITED whose administrative offices are at
+ * University Offices, Wellington Square, Oxford OX1 2JD, United Kingdom ("OUI")
+ * for use of File Receiver, a simple tool for monitoring SFTP folders and
+ * forwarded incoming messages into queues for processing by a distributed
+ * software architecture ("the Software") through this website
+ * https://github.com/OxBRCInformatics/file-receiver (the "Website").
  *
- *    1. Definitions.
+ * PLEASE READ THESE LICENCE TERMS CAREFULLY BEFORE DOWNLOADING THE SOFTWARE
+ * THROUGH THIS WEBSITE. IF YOU DO NOT AGREE TO THESE LICENCE TERMS YOU SHOULD NOT
+ * [REQUEST A USER NAME AND PASSWORD OR] DOWNLOAD THE SOFTWARE.
  *
- *       "License" shall mean the terms and conditions for use, reproduction,
- *       and distribution as defined by Sections 1 through 9 of this document.
+ * THE SOFTWARE IS INTENDED FOR USE BY ACADEMICS CARRYING OUT RESEARCH AND NOT FOR
+ * USE BY CONSUMERS OR COMMERCIAL BUSINESSES.
  *
- *       "Licensor" shall mean the copyright owner or entity authorized by
- *       the copyright owner that is granting the License.
+ * 1. Academic Use Licence
  *
- *       "Legal Entity" shall mean the union of the acting entity and all
- *       other entities that control, are controlled by, or are under common
- *       control with that entity. For the purposes of this definition,
- *       "control" means (i) the power, direct or indirect, to cause the
- *       direction or management of such entity, whether by contract or
- *       otherwise, or (ii) ownership of fifty percent (50%) or more of the
- *       outstanding shares, or (iii) beneficial ownership of such entity.
+ *   1.1 The Licensee is granted a limited non-exclusive and non-transferable
+ *       royalty free licence to download and use the Software provided that the
+ *       Licensee will:
  *
- *       "You" (or "Your") shall mean an individual or Legal Entity
- *       exercising permissions granted by this License.
+ *       (a) limit their use of the Software to their own internal academic
+ *           non-commercial research which is undertaken for the purposes of
+ *           education or other scholarly use;
  *
- *       "Source" form shall mean the preferred form for making modifications,
- *       including but not limited to software source code, documentation
- *       source, and configuration files.
+ *       (b) not use the Software for or on behalf of any third party or to
+ *           provide a service or integrate all or part of the Software into a
+ *           product for sale or license to third parties;
  *
- *       "Object" form shall mean any form resulting from mechanical
- *       transformation or translation of a Source form, including but
- *       not limited to compiled object code, generated documentation,
- *       and conversions to other media types.
+ *       (c) use the Software in accordance with the prevailing instructions and
+ *           guidance for use given on the Website and comply with procedures on
+ *           the Website for user identification, authentication and access;
  *
- *       "Work" shall mean the work of authorship, whether in Source or
- *       Object form, made available under the License, as indicated by a
- *       copyright notice that is included in or attached to the work
- *       (an example is provided in the Appendix below).
+ *       (d) comply with all applicable laws and regulations with respect to their
+ *           use of the Software; and
  *
- *       "Derivative Works" shall mean any work, whether in Source or Object
- *       form, that is based on (or derived from) the Work and for which the
- *       editorial revisions, annotations, elaborations, or other modifications
- *       represent, as a whole, an original work of authorship. For the purposes
- *       of this License, Derivative Works shall not include works that remain
- *       separable from, or merely link (or bind by name) to the interfaces of,
- *       the Work and Derivative Works thereof.
+ *       (e) ensure that the Copyright Notice (c) 2016, Oxford University
+ *           Innovation Ltd." appears prominently wherever the Software is
+ *           reproduced and is referenced or cited with the Copyright Notice when
+ *           the Software is described in any research publication or on any
+ *           documents or other material created using the Software.
  *
- *       "Contribution" shall mean any work of authorship, including
- *       the original version of the Work and any modifications or additions
- *       to that Work or Derivative Works thereof, that is intentionally
- *       submitted to Licensor for inclusion in the Work by the copyright owner
- *       or by an individual or Legal Entity authorized to submit on behalf of
- *       the copyright owner. For the purposes of this definition, "submitted"
- *       means any form of electronic, verbal, or written communication sent
- *       to the Licensor or its representatives, including but not limited to
- *       communication on electronic mailing lists, source code control systems,
- *       and issue tracking systems that are managed by, or on behalf of, the
- *       Licensor for the purpose of discussing and improving the Work, but
- *       excluding communication that is conspicuously marked or otherwise
- *       designated in writing by the copyright owner as "Not a Contribution."
+ *   1.2 The Licensee may only reproduce, modify, transmit or transfer the
+ *       Software where:
  *
- *       "Contributor" shall mean Licensor and any individual or Legal Entity
- *       on behalf of whom a Contribution has been received by Licensor and
- *       subsequently incorporated within the Work.
+ *       (a) such reproduction, modification, transmission or transfer is for
+ *           academic, research or other scholarly use;
  *
- *    2. Grant of Copyright License. Subject to the terms and conditions of
- *       this License, each Contributor hereby grants to You a perpetual,
- *       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
- *       copyright license to reproduce, prepare Derivative Works of,
- *       publicly display, publicly perform, sublicense, and distribute the
- *       Work and such Derivative Works in Source or Object form.
+ *       (b) the conditions of this Licence are imposed upon the receiver of the
+ *           Software or any modified Software;
  *
- *    3. Grant of Patent License. Subject to the terms and conditions of
- *       this License, each Contributor hereby grants to You a perpetual,
- *       worldwide, non-exclusive, no-charge, royalty-free, irrevocable
- *       (except as stated in this section) patent license to make, have made,
- *       use, offer to sell, sell, import, and otherwise transfer the Work,
- *       where such license applies only to those patent claims licensable
- *       by such Contributor that are necessarily infringed by their
- *       Contribution(s) alone or by combination of their Contribution(s)
- *       with the Work to which such Contribution(s) was submitted. If You
- *       institute patent litigation against any entity (including a
- *       cross-claim or counterclaim in a lawsuit) alleging that the Work
- *       or a Contribution incorporated within the Work constitutes direct
- *       or contributory patent infringement, then any patent licenses
- *       granted to You under this License for that Work shall terminate
- *       as of the date such litigation is filed.
+ *       (c) all original and modified Source Code is included in any transmitted
+ *           software program; and
  *
- *    4. Redistribution. You may reproduce and distribute copies of the
- *       Work or Derivative Works thereof in any medium, with or without
- *       modifications, and in Source or Object form, provided that You
- *       meet the following conditions:
+ *       (d) the Licensee grants OUI an irrevocable, indefinite, royalty free,
+ *           non-exclusive unlimited licence to use and sub-licence any modified
+ *           Source Code as part of the Software.
  *
- *       (a) You must give any other recipients of the Work or
- *           Derivative Works a copy of this License; and
+ *     1.3 OUI reserves the right at any time and without liability or prior
+ *         notice to the Licensee to revise, modify and replace the functionality
+ *         and performance of the access to and operation of the Software.
  *
- *       (b) You must cause any modified files to carry prominent notices
- *           stating that You changed the files; and
+ *     1.4 The Licensee acknowledges and agrees that OUI owns all intellectual
+ *         property rights in the Software. The Licensee shall not have any right,
+ *         title or interest in the Software.
  *
- *       (c) You must retain, in the Source form of any Derivative Works
- *           that You distribute, all copyright, patent, trademark, and
- *           attribution notices from the Source form of the Work,
- *           excluding those notices that do not pertain to any part of
- *           the Derivative Works; and
+ *     1.5 This Licence will terminate immediately and the Licensee will no longer
+ *         have any right to use the Software or exercise any of the rights
+ *         granted to the Licensee upon any breach of the conditions in Section 1
+ *         of this Licence.
  *
- *       (d) If the Work includes a "NOTICE" text file as part of its
- *           distribution, then any Derivative Works that You distribute must
- *           include a readable copy of the attribution notices contained
- *           within such NOTICE file, excluding those notices that do not
- *           pertain to any part of the Derivative Works, in at least one
- *           of the following places: within a NOTICE text file distributed
- *           as part of the Derivative Works; within the Source form or
- *           documentation, if provided along with the Derivative Works; or,
- *           within a display generated by the Derivative Works, if and
- *           wherever such third-party notices normally appear. The contents
- *           of the NOTICE file are for informational purposes only and
- *           do not modify the License. You may add Your own attribution
- *           notices within Derivative Works that You distribute, alongside
- *           or as an addendum to the NOTICE text from the Work, provided
- *           that such additional attribution notices cannot be construed
- *           as modifying the License.
+ * 2. Indemnity and Liability
  *
- *       You may add Your own copyright statement to Your modifications and
- *       may provide additional or different license terms and conditions
- *       for use, reproduction, or distribution of Your modifications, or
- *       for any such Derivative Works as a whole, provided Your use,
- *       reproduction, and distribution of the Work otherwise complies with
- *       the conditions stated in this License.
+ *   2.1 The Licensee shall defend, indemnify and hold harmless OUI against any
+ *       claims, actions, proceedings, losses, damages, expenses and costs
+ *       (including without limitation court costs and reasonable legal fees)
+ *       arising out of or in connection with the Licensee's possession or use of
+ *       the Software, or any breach of these terms by the Licensee.
  *
- *    5. Submission of Contributions. Unless You explicitly state otherwise,
- *       any Contribution intentionally submitted for inclusion in the Work
- *       by You to the Licensor shall be under the terms and conditions of
- *       this License, without any additional terms or conditions.
- *       Notwithstanding the above, nothing herein shall supersede or modify
- *       the terms of any separate license agreement you may have executed
- *       with Licensor regarding such Contributions.
+ *   2.2 The Software is provided on an "as is" basis and the Licensee uses the
+ *       Software at their own risk. No representations, conditions, warranties or
+ *       other terms of any kind are given in respect of the the Software and all
+ *       statutory warranties and conditions are excluded to the fullest extent
+ *       permitted by law. Without affecting the generality of the previous
+ *       sentences, OUI gives no implied or express warranty and makes no
+ *       representation that the Software or any part of the Software:
  *
- *    6. Trademarks. This License does not grant permission to use the trade
- *       names, trademarks, service marks, or product names of the Licensor,
- *       except as required for reasonable and customary use in describing the
- *       origin of the Work and reproducing the content of the NOTICE file.
+ *       (a) will enable specific results to be obtained; or
  *
- *    7. Disclaimer of Warranty. Unless required by applicable law or
- *       agreed to in writing, Licensor provides the Work (and each
- *       Contributor provides its Contributions) on an "AS IS" BASIS,
- *       WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
- *       implied, including, without limitation, any warranties or conditions
- *       of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
- *       PARTICULAR PURPOSE. You are solely responsible for determining the
- *       appropriateness of using or redistributing the Work and assume any
- *       risks associated with Your exercise of permissions under this License.
+ *       (b) meets a particular specification or is comprehensive within its field
+ *           or that it is error free or will operate without interruption; or
  *
- *    8. Limitation of Liability. In no event and under no legal theory,
- *       whether in tort (including negligence), contract, or otherwise,
- *       unless required by applicable law (such as deliberate and grossly
- *       negligent acts) or agreed to in writing, shall any Contributor be
- *       liable to You for damages, including any direct, indirect, special,
- *       incidental, or consequential damages of any character arising as a
- *       result of this License or out of the use or inability to use the
- *       Work (including but not limited to damages for loss of goodwill,
- *       work stoppage, computer failure or malfunction, or any and all
- *       other commercial damages or losses), even if such Contributor
- *       has been advised of the possibility of such damages.
+ *       (c) is suitable for any particular, or the Licensee's specific purposes.
  *
- *    9. Accepting Warranty or Additional Liability. While redistributing
- *       the Work or Derivative Works thereof, You may choose to offer,
- *       and charge a fee for, acceptance of support, warranty, indemnity,
- *       or other liability obligations and/or rights consistent with this
- *       License. However, in accepting such obligations, You may act only
- *       on Your own behalf and on Your sole responsibility, not on behalf
- *       of any other Contributor, and only if You agree to indemnify,
- *       defend, and hold each Contributor harmless for any liability
- *       incurred by, or claims asserted against, such Contributor by reason
- *       of your accepting any such warranty or additional liability.
+ *   2.3 Except in relation to fraud, death or personal injury, OUI"s liability to
+ *       the Licensee for any use of the Software, in negligence or arising in any
+ *       other way out of the subject matter of these licence terms, will not
+ *       extend to any incidental or consequential damages or losses, or any loss
+ *       of profits, loss of revenue, loss of data, loss of contracts or
+ *       opportunity, whether direct or indirect.
  *
- *    END OF TERMS AND CONDITIONS
+ *   2.4 The Licensee hereby irrevocably undertakes to OUI not to make any claim
+ *       against any employee, student, researcher or other individual engaged by
+ *       OUI, being a claim which seeks to enforce against any of them any
+ *       liability whatsoever in connection with these licence terms or their
+ *       subject-matter.
  *
- *    APPENDIX: How to apply the Apache License to your work.
+ * 3. General
  *
- *       To apply the Apache License to your work, attach the following
- *       boilerplate notice, with the fields enclosed by brackets "{}"
- *       replaced with your own identifying information. (Don't include
- *       the brackets!)  The text should be enclosed in the appropriate
- *       comment syntax for the file format. We also recommend that a
- *       file or class name and description of purpose be included on the
- *       same "printed page" as the copyright notice for easier
- *       identification within third-party archives.
+ *   3.1 Severability - If any provision (or part of a provision) of these licence
+ *       terms is found by any court or administrative body of competent
+ *       jurisdiction to be invalid, unenforceable or illegal, the other
+ *       provisions shall remain in force.
  *
- *    Copyright {yyyy} {name of copyright owner}
+ *   3.2 Entire Agreement - These licence terms constitute the whole agreement
+ *       between the parties and supersede any previous arrangement, understanding
+ *       or agreement between them relating to the Software.
  *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
+ *   3.3 Law and Jurisdiction - These licence terms and any disputes or claims
+ *       arising out of or in connection with them shall be governed by, and
+ *       construed in accordance with, the law of England. The Licensee
+ *       irrevocably submits to the exclusive jurisdiction of the English courts
+ *       for any dispute or claim that arises out of or in connection with these
+ *       licence terms.
  *
- *        http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * If you are interested in using the Software commercially, please contact
+ * Oxford University Innovation Limited to negotiate a licence.
+ * Contact details are enquiries@innovation.ox.ac.uk quoting reference 14422.
  */
 package ox.softeng.gel.filereceive.config;
 
